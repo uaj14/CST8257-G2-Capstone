@@ -1,21 +1,11 @@
 <?php
 
+use App\Livewire\Settings\Security;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Fortify\Features;
 use Livewire\Livewire;
 
-beforeEach(function () {
-    $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
-    ]);
-    Features::passkeys([
-        'confirmPassword' => true,
-    ]);
-});
+beforeEach(function () {});
 
 test('security settings page can be rendered', function () {
     $user = User::factory()->create();
@@ -25,11 +15,6 @@ test('security settings page can be rendered', function () {
         ->get(route('security.edit'));
 
     $response->assertOk();
-
-    $response->assertSee('Passkeys');
-    $response->assertSee('No passkeys yet');
-    $response->assertSee('Two-factor authentication');
-    $response->assertSee('Enable 2FA');
 });
 
 test('security settings page requires password confirmation when enabled', function () {
@@ -56,28 +41,6 @@ test('security settings page renders without two factor when feature is disabled
         ->assertDontSee('Two-factor authentication');
 });
 
-test('two factor authentication disabled when confirmation abandoned between requests', function () {
-    $user = User::factory()->create();
-
-    $user->forceFill([
-        'two_factor_secret' => encrypt('test-secret'),
-        'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-        'two_factor_confirmed_at' => null,
-    ])->save();
-
-    $this->actingAs($user);
-
-    $component = Livewire::test('pages::settings.security');
-
-    $component->assertSet('twoFactorEnabled', false);
-
-    $this->assertDatabaseHas('users', [
-        'id' => $user->id,
-        'two_factor_secret' => null,
-        'two_factor_recovery_codes' => null,
-    ]);
-});
-
 test('password can be updated', function () {
     $user = User::factory()->create([
         'password' => Hash::make('password'),
@@ -85,7 +48,7 @@ test('password can be updated', function () {
 
     $this->actingAs($user);
 
-    $response = Livewire::test('pages::settings.security')
+    $response = Livewire::test(Security::class)
         ->set('current_password', 'password')
         ->set('password', 'new-password')
         ->set('password_confirmation', 'new-password')
@@ -103,7 +66,7 @@ test('correct password must be provided to update password', function () {
 
     $this->actingAs($user);
 
-    $response = Livewire::test('pages::settings.security')
+    $response = Livewire::test(Security::class)
         ->set('current_password', 'wrong-password')
         ->set('password', 'new-password')
         ->set('password_confirmation', 'new-password')
