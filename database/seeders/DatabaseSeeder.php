@@ -24,8 +24,22 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        User::factory(5)->create();
-        TaskList::factory(10)->create();
-        Task::factory(25)->create();
+        // This assigns new task_list and tasks to pre-existing users.
+        $users = User::factory(5)->create();
+        TaskList::factory(10)
+            ->state(function () use ($users) {  //state() overrides definitions from the original factory files.
+                return [
+                    "user_id" => $users->random()->id,
+                ];
+            })
+            ->create();
+
+        Task::factory(25)
+            ->state(function () use ($users) {
+                return [
+                    "user_id" => $users->random()->id,
+                ];
+            })
+            ->create();
     }
 }
