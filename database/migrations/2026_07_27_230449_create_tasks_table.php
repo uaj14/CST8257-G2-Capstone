@@ -28,6 +28,7 @@ return new class extends Migration
                 'position'
             ]);
             $table->text("description")->nullable();
+            $table->date('deadline')->nullable();
             $table->timestamps();
         });
     }

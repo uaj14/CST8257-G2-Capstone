@@ -22,6 +22,7 @@ class TaskList extends Model
 
     public function tasks()
     {
-        return $this->hasMany(Task::class);
+        return $this->hasMany(Task::class)
+            ->orderBy('position');
     }
 }

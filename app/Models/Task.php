@@ -16,7 +16,13 @@ class Task extends Model
         'name',
         'description',
         'priority',
+        'deadline',
         'position',
+    ];
+
+    // This turns deadline into a carbon date object.
+    protected $casts = [
+        'deadline' => 'date',
     ];
 
     public function user()

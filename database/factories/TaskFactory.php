@@ -26,6 +26,7 @@ class TaskFactory extends Factory
             'task_list_id' => null,
             'name' => fake()->sentence(),
             'priority' => fake()->numberBetween(0, 2),
+            'deadline' => fake()->optional()->dateTimeBetween('now', '+1 year'),
             'position' => null,
         ];
     }

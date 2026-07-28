@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -61,12 +62,12 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     // Defines relationship to other tables.
-    public function taskLists()
+    public function taskLists(): HasMany
     {
         return $this->hasMany(TaskList::class);
     }
 
-    public function tasks()
+    public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
