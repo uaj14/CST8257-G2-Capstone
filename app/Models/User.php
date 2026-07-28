@@ -59,4 +59,15 @@ class User extends Authenticatable implements PasskeyUser
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
+
+    // Defines relationship to other tables.
+    public function taskLists()
+    {
+        return $this->hasMany(TaskList::class);
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 }

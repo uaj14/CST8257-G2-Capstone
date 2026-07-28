@@ -13,6 +13,21 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId("user_id")
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->foreignId("task_list_id")
+                ->nullable()
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->string("name");
+            $table->integer("priority");
+            $table->integer("position")->nullable();
+            $table->unique([        // This ensures a given task's position in a given task_list.
+                'task_list_id',
+                'position'
+            ]);
+            $table->text("description")->nullable();
             $table->timestamps();
         });
     }
