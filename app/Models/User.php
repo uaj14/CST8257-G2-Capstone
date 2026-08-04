@@ -60,7 +60,7 @@ class User extends Authenticatable
 
     // Defines relationship to other tables.
     /**
-     * @return HasMany<TaskList, static>
+     * @return HasMany<TaskList, $this>
      */
     public function taskLists(): HasMany
     {
@@ -68,7 +68,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<Task, static>
+     * @return HasMany<Task, $this>
      */
     public function tasks(): HasMany
     {
