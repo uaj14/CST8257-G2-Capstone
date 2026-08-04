@@ -19,7 +19,7 @@ class TaskList extends Model
     ];
 
     /**
-     * @return BelongsTo<User, TaskList>
+     * @return BelongsTo<User, static>
      */
     public function user(): BelongsTo
     {
@@ -27,7 +27,7 @@ class TaskList extends Model
     }
 
     /**
-     * @return HasMany<Task, TaskList>
+     * @return HasMany<Task, static>
      */
     public function tasks(): HasMany
     {
