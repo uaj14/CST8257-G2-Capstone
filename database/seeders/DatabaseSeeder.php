@@ -27,9 +27,9 @@ class DatabaseSeeder extends Seeder
         // This assigns new task_list and tasks to pre-existing users.
         $users = User::factory(5)->create();
         $task_lists = TaskList::factory(10)
-            ->state(function () use ($users) {  //state() overrides definitions from the original factory files.
+            ->state(function () use ($users) {  // state() overrides definitions from the original factory files.
                 return [
-                    "user_id" => $users->random()->id,
+                    'user_id' => $users->random()->id,
                 ];
             })
             ->create();
