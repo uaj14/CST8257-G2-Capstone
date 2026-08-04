@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\TaskListFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TaskList extends Model
 {
-    /** @use HasFactory<\Database\Factories\TaskListFactory> */
+    /** @use HasFactory<TaskListFactory> */
     use HasFactory;
 
     protected $fillable = [
