@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
 {
@@ -26,12 +27,18 @@ class Task extends Model
         'deadline' => 'date',
     ];
 
-    public function user()
+    /**
+     * @return BelongsTo<User, Task>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function taskList()
+    /**
+     * @return BelongsTo<TaskList, Task>
+     */
+    public function taskList(): BelongsTo
     {
         return $this->belongsTo(TaskList::class);
     }

@@ -59,11 +59,17 @@ class User extends Authenticatable
     }
 
     // Defines relationship to other tables.
+    /**
+     * @return HasMany<TaskList, User>
+     */
     public function taskLists(): HasMany
     {
         return $this->hasMany(TaskList::class);
     }
 
+    /**
+     * @return HasMany<Task, User>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);

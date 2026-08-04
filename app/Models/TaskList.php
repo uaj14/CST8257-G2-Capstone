@@ -5,6 +5,8 @@ namespace App\Models;
 use Database\Factories\TaskListFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TaskList extends Model
 {
@@ -16,12 +18,18 @@ class TaskList extends Model
         'name',
     ];
 
-    public function user()
+    /**
+     * @return BelongsTo<User, TaskList>
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function tasks()
+    /**
+     * @return HasMany<Task, TaskList>
+     */
+    public function tasks(): HasMany
     {
         return $this->hasMany(Task::class)
             ->orderBy('position');
