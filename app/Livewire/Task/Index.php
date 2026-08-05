@@ -18,7 +18,8 @@ class Index extends Component
 
     public ?Task $editingTask = null;
 
-    protected array $listeners = [
+    /** @var array<string, string> */
+    protected $listeners = [
         'task-created' => 'onTaskCreated',
         'task-updated' => 'onTaskUpdated',
     ];
