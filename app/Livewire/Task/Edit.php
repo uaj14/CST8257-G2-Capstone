@@ -9,7 +9,9 @@ use Livewire\Component;
 
 class Edit extends Component
 {
-    public Task $task;
+    public bool $showModal = false;
+
+    public ?Task $task = null;
 
     public string $name = '';
 
@@ -19,18 +21,31 @@ class Edit extends Component
 
     public ?string $deadline = null;
 
-    public function mount(Task $task): void
+    /** @var array<string, string> */
+    protected $listeners = [
+        'open-edit-task' => 'open',
+    ];
+
+    public function open(int $taskId): void
     {
+        $task = Task::findOrFail($taskId);
         $this->authorize('update', $task);
+
         $this->task = $task;
         $this->name = $task->name;
         $this->description = $task->description ?? '';
         $this->priority = $task->priority;
         $this->deadline = $task->deadline?->format('Y-m-d');
+        $this->resetValidation();
+        $this->showModal = true;
     }
 
     public function save(): void
     {
+        if ($this->task === null) {
+            return;
+        }
+
         $this->authorize('update', $this->task);
 
         $this->validate([
@@ -46,6 +61,8 @@ class Edit extends Component
             'priority' => $this->priority,
             'deadline' => $this->deadline,
         ]);
+
+        $this->showModal = false;
 
         Flux::toast('Task updated.');
         $this->dispatch('task-updated');

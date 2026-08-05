@@ -12,6 +12,8 @@ class Create extends Component
 {
     public TaskList $taskList;
 
+    public bool $showModal = false;
+
     public string $name = '';
 
     public string $description = '';
@@ -20,10 +22,23 @@ class Create extends Component
 
     public ?string $deadline = null;
 
+    /** @var array<string, string> */
+    protected $listeners = [
+        'open-create-task' => 'open',
+    ];
+
     public function mount(TaskList $taskList): void
     {
         $this->authorize('view', $taskList);
         $this->taskList = $taskList;
+    }
+
+    public function open(): void
+    {
+        $this->reset(['name', 'description', 'deadline']);
+        $this->priority = 1;
+        $this->resetValidation();
+        $this->showModal = true;
     }
 
     public function create(): void
@@ -48,10 +63,10 @@ class Create extends Component
             'position' => $maxPosition + 1,
         ]);
 
+        $this->showModal = false;
+
         Flux::toast('Task added.');
         $this->dispatch('task-created');
-        $this->reset(['name', 'description', 'deadline']);
-        $this->priority = 1;
     }
 
     public function render(): View
