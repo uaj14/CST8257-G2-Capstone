@@ -4,6 +4,7 @@ namespace App\Livewire\TaskList;
 
 use App\Models\TaskList;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class Edit extends Component
@@ -31,7 +32,7 @@ class Edit extends Component
         $this->dispatch('task-list-updated');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.task-list.edit');
     }

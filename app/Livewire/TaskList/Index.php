@@ -4,6 +4,7 @@ namespace App\Livewire\TaskList;
 
 use App\Models\TaskList;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class Index extends Component
@@ -14,7 +15,7 @@ class Index extends Component
 
     public ?TaskList $editingTaskList = null;
 
-    protected $listeners = [
+    protected array $listeners = [
         'task-list-created' => 'onTaskListCreated',
         'task-list-updated' => 'onTaskListUpdated',
     ];
@@ -49,7 +50,7 @@ class Index extends Component
         Flux::toast('Task list deleted.');
     }
 
-    public function render()
+    public function render(): View
     {
         $taskLists = auth()->user()
             ->taskLists()
