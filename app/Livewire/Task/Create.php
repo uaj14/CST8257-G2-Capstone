@@ -5,6 +5,7 @@ namespace App\Livewire\Task;
 use App\Models\Task;
 use App\Models\TaskList;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
 class Create extends Component
@@ -53,7 +54,7 @@ class Create extends Component
         $this->priority = 1;
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.task.create');
     }
