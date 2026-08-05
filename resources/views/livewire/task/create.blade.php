@@ -1,4 +1,4 @@
-<flux:modal wire:model="showCreateModal" variant="flyout">
+<flux:modal wire:model="showModal" variant="flyout">
     <flux:heading size="lg">New Task</flux:heading>
     <p class="text-sm text-neutral-500 mt-1">Add a task to {{ $taskList->name }}</p>
 
@@ -32,7 +32,7 @@
         </flux:field>
 
         <div class="flex justify-end gap-3 pt-2">
-            <flux:button type="button" wire:click="$set('showCreateModal', false)" variant="ghost">
+            <flux:button type="button" wire:click="$set('showModal', false)" variant="ghost">
                 Cancel
             </flux:button>
             <flux:button type="submit" variant="primary">

@@ -12,16 +12,10 @@ class Index extends Component
 {
     public TaskList $taskList;
 
-    public bool $showCreateModal = false;
-
-    public bool $showEditModal = false;
-
-    public ?Task $editingTask = null;
-
     /** @var array<string, string> */
     protected $listeners = [
-        'task-created' => 'onTaskCreated',
-        'task-updated' => 'onTaskUpdated',
+        'task-created' => 'refreshList',
+        'task-updated' => 'refreshList',
     ];
 
     public function mount(TaskList $taskList): void
@@ -30,27 +24,9 @@ class Index extends Component
         $this->taskList = $taskList;
     }
 
-    public function openCreate(): void
+    public function refreshList(): void
     {
-        $this->showCreateModal = true;
-    }
-
-    public function openEdit(Task $task): void
-    {
-        $this->authorize('update', $task);
-        $this->editingTask = $task;
-        $this->showEditModal = true;
-    }
-
-    public function onTaskCreated(): void
-    {
-        $this->showCreateModal = false;
-    }
-
-    public function onTaskUpdated(): void
-    {
-        $this->showEditModal = false;
-        $this->editingTask = null;
+        // Receiving the event triggers a re-render of this component.
     }
 
     public function delete(Task $task): void

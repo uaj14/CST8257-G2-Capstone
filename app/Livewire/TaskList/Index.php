@@ -9,39 +9,15 @@ use Livewire\Component;
 
 class Index extends Component
 {
-    public bool $showCreateModal = false;
-
-    public bool $showEditModal = false;
-
-    public ?TaskList $editingTaskList = null;
-
     /** @var array<string, string> */
     protected $listeners = [
-        'task-list-created' => 'onTaskListCreated',
-        'task-list-updated' => 'onTaskListUpdated',
+        'task-list-created' => 'refreshList',
+        'task-list-updated' => 'refreshList',
     ];
 
-    public function openCreate(): void
+    public function refreshList(): void
     {
-        $this->showCreateModal = true;
-    }
-
-    public function openEdit(TaskList $taskList): void
-    {
-        $this->authorize('update', $taskList);
-        $this->editingTaskList = $taskList;
-        $this->showEditModal = true;
-    }
-
-    public function onTaskListCreated(): void
-    {
-        $this->showCreateModal = false;
-    }
-
-    public function onTaskListUpdated(): void
-    {
-        $this->showEditModal = false;
-        $this->editingTaskList = null;
+        // Receiving the event triggers a re-render of this component.
     }
 
     public function delete(TaskList $taskList): void

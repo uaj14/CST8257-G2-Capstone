@@ -9,7 +9,21 @@ use Livewire\Component;
 
 class Create extends Component
 {
+    public bool $showModal = false;
+
     public string $name = '';
+
+    /** @var array<string, string> */
+    protected $listeners = [
+        'open-create-task-list' => 'open',
+    ];
+
+    public function open(): void
+    {
+        $this->reset('name');
+        $this->resetValidation();
+        $this->showModal = true;
+    }
 
     public function create(): void
     {
@@ -21,9 +35,11 @@ class Create extends Component
             'name' => $this->name,
         ]);
 
+        $this->showModal = false;
+        $this->reset('name');
+
         Flux::toast('Task list created.');
         $this->dispatch('task-list-created');
-        $this->reset('name');
     }
 
     public function render(): View

@@ -6,7 +6,7 @@
                 <flux:breadcrumbs.item>{{ $taskList->name }}</flux:breadcrumbs.item>
             </flux:breadcrumbs>
         </div>
-        <flux:button wire:click="openCreate" variant="primary" size="sm">
+        <flux:button wire:click="$dispatch('open-create-task')" variant="primary" size="sm">
             Add Task
         </flux:button>
     </div>
@@ -23,7 +23,11 @@
     @else
         <div class="flex flex-col gap-3">
             @foreach($tasks as $task)
-                <flux:card class="flex items-start gap-4" wire:key="{{ $task->id }}">
+                <flux:card
+                    class="group flex cursor-pointer items-start gap-4 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500"
+                    wire:key="{{ $task->id }}"
+                    wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })"
+                >
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -44,11 +48,11 @@
                             </p>
                         @endif
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0" x-on:click.stop>
                         <flux:dropdown>
                             <flux:button variant="ghost" size="sm" icon="ellipsis-vertical" />
                             <flux:menu>
-                                <flux:menu.item wire:click="openEdit({{ $task->id }})">
+                                <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                     Edit
                                 </flux:menu.item>
                                 <flux:menu.item
@@ -66,13 +70,6 @@
         </div>
     @endif
 
-    <!-- Create Modal -->
-    @if($showCreateModal)
-        <livewire:task.create :taskList="$taskList" />
-    @endif
-
-    <!-- Edit Modal -->
-    @if($showEditModal && $editingTask)
-        <livewire:task.edit :task="$editingTask" wire:key="edit-task-{{ $editingTask->id }}" />
-    @endif
+    <livewire:task.create :taskList="$taskList" />
+    <livewire:task.edit />
 </div>
