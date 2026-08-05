@@ -43,6 +43,7 @@ class Create extends Component
 
     public function create(): void
     {
+        $this->authorize('view', $this->taskList);
         $this->authorize('create', Task::class);
 
         $this->validate([
