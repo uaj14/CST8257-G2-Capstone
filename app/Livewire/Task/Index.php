@@ -36,6 +36,32 @@ class Index extends Component
         Flux::toast('Task deleted.');
     }
 
+    /**
+     * Reorder tasks in this list based on the new order of IDs.
+     *
+     * @param  array<int>  $orderedIds
+     */
+    public function reorder(array $orderedIds): void
+    {
+        $this->authorize('update', $this->taskList);
+
+        $ownedIds = $this->taskList->tasks()
+            ->where('user_id', auth()->id())
+            ->pluck('id')
+            ->all();
+
+        // Ignore any IDs the client tries to inject that don't belong to this user/list.
+        $valid = array_values(array_intersect($orderedIds, $ownedIds));
+
+        foreach ($valid as $position => $taskId) {
+            Task::where('id', $taskId)
+                ->where('task_list_id', $this->taskList->id)
+                ->update(['position' => $position + 1]);
+        }
+
+        $this->dispatch('task-updated');
+    }
+
     public function render(): View
     {
         $tasks = $this->taskList->tasks()

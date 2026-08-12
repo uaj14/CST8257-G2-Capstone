@@ -15,6 +15,8 @@ class Edit extends Component
 
     public string $name = '';
 
+    public string $color = '';
+
     /** @var array<string, string> */
     protected $listeners = [
         'open-edit-task-list' => 'open',
@@ -27,6 +29,7 @@ class Edit extends Component
 
         $this->taskList = $taskList;
         $this->name = $taskList->name;
+        $this->color = $taskList->color ?? TaskList::defaultColor();
         $this->resetValidation();
         $this->showModal = true;
     }
@@ -39,13 +42,19 @@ class Edit extends Component
 
         $this->authorize('update', $this->taskList);
 
-        $this->validate(['name' => 'required|string|max:255']);
+        $this->validate([
+            'name'  => 'required|string|max:255',
+            'color' => 'required|in:'.implode(',', array_keys(TaskList::COLORS)),
+        ]);
 
-        $this->taskList->update(['name' => $this->name]);
+        $this->taskList->update([
+            'name'  => $this->name,
+            'color' => $this->color,
+        ]);
 
         $this->showModal = false;
 
-        Flux::toast('Task list renamed.');
+        Flux::toast('Task list updated.');
         $this->dispatch('task-list-updated');
     }
 

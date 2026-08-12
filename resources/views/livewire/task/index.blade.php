@@ -1,4 +1,6 @@
-<div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+<div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl"
+     x-data="taskReorder(@js($tasks->pluck('id')->all()))"
+     @task-reordered.window="reorder($event.detail.ids)">
     <div class="flex items-center justify-between">
         <div>
             <flux:breadcrumbs>
@@ -21,14 +23,25 @@
             <p class="text-neutral-500 dark:text-neutral-400">No tasks yet. Add one to get started.</p>
         </div>
     @else
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-3" x-ref="list">
             @foreach($tasks as $task)
                 <flux:card
-                    class="group flex cursor-pointer items-start gap-4 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500"
+                    class="group flex cursor-grab items-start gap-4 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500"
                     wire:key="{{ $task->id }}"
-                    wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })"
+                    data-task-id="{{ $task->id }}"
+                    draggable="true"
+                    x-bind:draggable="true"
+                    x-on:dragstart="onDragStart($event, {{ $task->id }})"
+                    x-on:dragover.prevent="onDragOver($event, {{ $task->id }})"
+                    x-on:drop="onDrop($event, {{ $task->id }})"
+                    x-on:dragend="onDragEnd($event)"
+                    x-bind:class="{ 'opacity-50 scale-95': draggingId === {{ $task->id }} }"
                 >
-                    <div class="flex-1 min-w-0">
+                    <div class="flex-shrink-0 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
+                        <flux:icon name="bars-3" class="size-5" />
+                    </div>
+                    <div class="flex-1 min-w-0"
+                         x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                         <div class="flex items-center gap-2">
                             <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $task->name }}
@@ -52,7 +65,7 @@
                         <flux:dropdown>
                             <flux:button variant="ghost" size="sm" icon="ellipsis-vertical" />
                             <flux:menu>
-                                <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
+                                <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} }))">
                                     Edit
                                 </flux:menu.item>
                                 <flux:menu.item
@@ -73,3 +86,44 @@
     <livewire:task.create :taskList="$taskList" />
     <livewire:task.edit />
 </div>
+
+@script
+<script>
+    function taskReorder(initialIds) {
+        return {
+            draggingId: null,
+            order: initialIds,
+
+            onDragStart(event, id) {
+                this.draggingId = id;
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', String(id));
+            },
+
+            onDragOver(event, overId) {
+                if (this.draggingId === null || this.draggingId === overId) return;
+                event.dataTransfer.dropEffect = 'move';
+            },
+
+            onDrop(event, dropOnId) {
+                if (this.draggingId === null || this.draggingId === dropOnId) return;
+                event.preventDefault();
+
+                const from = this.order.indexOf(this.draggingId);
+                const to   = this.order.indexOf(dropOnId);
+                if (from === -1 || to === -1) return;
+
+                const moved = this.order.splice(from, 1)[0];
+                this.order.splice(to, 0, moved);
+
+                $wire.call('reorder', this.order);
+                this.draggingId = null;
+            },
+
+            onDragEnd() {
+                this.draggingId = null;
+            },
+        };
+    }
+</script>
+@endscript

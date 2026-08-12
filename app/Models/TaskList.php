@@ -16,7 +16,24 @@ class TaskList extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'color',
     ];
+
+    public const COLORS = [
+        'slate'   => '#64748b',
+        'red'     => '#ef4444',
+        'orange'  => '#f97316',
+        'amber'   => '#f59e0b',
+        'green'   => '#22c55e',
+        'blue'    => '#3b82f6',
+        'violet'  => '#8b5cf6',
+        'pink'    => '#ec4899',
+    ];
+
+    public static function defaultColor(): string
+    {
+        return 'blue';
+    }
 
     /**
      * @return BelongsTo<User, $this>
