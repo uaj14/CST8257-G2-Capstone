@@ -43,12 +43,12 @@ class Edit extends Component
         $this->authorize('update', $this->taskList);
 
         $this->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'color' => 'required|in:'.implode(',', array_keys(TaskList::COLORS)),
         ]);
 
         $this->taskList->update([
-            'name'  => $this->name,
+            'name' => $this->name,
             'color' => $this->color,
         ]);
 

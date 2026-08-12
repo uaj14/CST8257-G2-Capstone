@@ -38,12 +38,12 @@ class Create extends Component
         $this->authorize('create', TaskList::class);
 
         $this->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'color' => 'required|in:'.implode(',', array_keys(TaskList::COLORS)),
         ]);
 
         auth()->user()->taskLists()->create([
-            'name'  => $this->name,
+            'name' => $this->name,
             'color' => $this->color,
         ]);
 

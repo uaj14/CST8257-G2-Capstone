@@ -15,7 +15,7 @@
             @foreach($taskLists as $taskList)
                 @php $borderColor = \App\Models\TaskList::COLORS[$taskList->color ?? \App\Models\TaskList::defaultColor()] ?? '#3b82f6'; @endphp
                 <flux:card
-                    class="group relative flex flex-col gap-3 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500 border-l-4"
+                    class="group relative flex flex-col gap-3 transition duration-150 border-l-4 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     wire:key="{{ $taskList->id }}"
                     style="border-left-color: {{ $borderColor }}"
                 >

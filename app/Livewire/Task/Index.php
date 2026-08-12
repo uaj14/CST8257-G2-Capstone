@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\TaskList;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class Index extends Component
@@ -53,11 +54,13 @@ class Index extends Component
         // Ignore any IDs the client tries to inject that don't belong to this user/list.
         $valid = array_values(array_intersect($orderedIds, $ownedIds));
 
-        foreach ($valid as $position => $taskId) {
-            Task::where('id', $taskId)
-                ->where('task_list_id', $this->taskList->id)
-                ->update(['position' => $position + 1]);
-        }
+        DB::transaction(function () use ($valid): void {
+            foreach ($valid as $position => $taskId) {
+                Task::where('id', $taskId)
+                    ->where('task_list_id', $this->taskList->id)
+                    ->update(['position' => $position + 1]);
+            }
+        });
 
         $this->dispatch('task-updated');
     }
