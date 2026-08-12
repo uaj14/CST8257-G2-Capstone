@@ -33,7 +33,14 @@ class Index extends Component
     public function delete(Task $task): void
     {
         $this->authorize('delete', $task);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
         $task->delete();
+
         Flux::toast('Task deleted.');
     }
 
