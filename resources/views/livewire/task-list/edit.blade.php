@@ -13,14 +13,16 @@
 
         <flux:field>
             <flux:label>Color</flux:label>
-            <div class="flex flex-wrap gap-2 mt-1">
+            <div class="flex flex-wrap gap-3 mt-1">
                 @foreach(TaskList::COLORS as $key => $hex)
                     <button
                         type="button"
                         wire:click="$set('color', '{{ $key }}')"
-                        class="size-8 rounded-full border-2 transition {{ $color === $key ? 'border-neutral-900 dark:border-neutral-100 scale-110' : 'border-transparent hover:scale-105' }}"
-                        style="background-color: {{ $hex }}"
+                        title="{{ ucfirst($key) }}"
+                        class="size-9 rounded-full transition shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-neutral-100"
+                        style="background-color: {{ $hex }}; box-shadow: 0 0 0 2px {{ $color === $key ? '#fff' : 'transparent' }}, 0 0 0 4px {{ $color === $key ? $hex : 'transparent' }};"
                         aria-label="Color {{ $key }}"
+                        aria-pressed="{{ $color === $key ? 'true' : 'false' }}"
                     ></button>
                 @endforeach
             </div>
