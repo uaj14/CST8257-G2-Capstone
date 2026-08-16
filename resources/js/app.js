@@ -7,16 +7,6 @@ window.taskReorder = function (initialIds) {
         draggingId: null,
         order: initialIds,
 
-        init() {
-            // The HTML5 spec only treats draggable="true" as natively draggable.
-            // Laravel/Blaze folds boolean attributes into draggable="draggable",
-            // which the browser reads as NOT draggable. Set the DOM property
-            // directly to bypass the attribute mangling.
-            this.$root.querySelectorAll('[data-task-id]').forEach((el) => {
-                el.draggable = true;
-            });
-        },
-
         onDragStart(event, id) {
             this.draggingId = id;
             event.dataTransfer.effectAllowed = 'move';
@@ -51,3 +41,31 @@ window.taskReorder = function (initialIds) {
         },
     };
 };
+
+// === Critical: re-apply draggable DOM property after every Livewire morph ===
+// Per the HTML5 spec, draggable is only native-draggable when the attribute
+// value is exactly "true". Laravel/Blaze folds `draggable="true"` on Blade
+// component tags into `draggable="draggable"` — which the browser reads as
+// NOT draggable. Alpine's init() fixes this on first boot, but Livewire
+// morphs create NEW DOM nodes on every update, and init() never re-runs.
+// Hook into Livewire's morph lifecycle so every card stays draggable across
+// re-order responses.
+(function () {
+    function makeCardsDraggable() {
+        document.querySelectorAll('[data-task-id]').forEach(function (el) {
+            el.draggable = true;
+        });
+    }
+
+    // Run immediately on initial load (before Livewire might be loaded)
+    makeCardsDraggable();
+
+    // Then hook into every subsequent Livewire morph
+    if (typeof window.Livewire !== 'undefined') {
+        window.Livewire.hook('morph.updated', function () { makeCardsDraggable(); });
+    } else {
+        document.addEventListener('livewire:init', function () {
+            window.Livewire.hook('morph.updated', function () { makeCardsDraggable(); });
+        });
+    }
+})();
