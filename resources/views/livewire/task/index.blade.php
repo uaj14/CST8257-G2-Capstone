@@ -30,7 +30,6 @@
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
                     draggable="true"
-                    x-bind:draggable="true"
                     x-on:dragstart="onDragStart($event, {{ $task->id }})"
                     x-on:dragover.prevent="onDragOver($event, {{ $task->id }})"
                     x-on:drop="onDrop($event, {{ $task->id }})"

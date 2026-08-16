@@ -62,6 +62,11 @@ class Index extends Component
         $valid = array_values(array_intersect($orderedIds, $ownedIds));
 
         DB::transaction(function () use ($valid): void {
+            // Free the unique (task_list_id, position) constraint before renumbering
+            // by nulling every position in this list, then assigning sequential ones.
+            Task::where('task_list_id', $this->taskList->id)
+                ->update(['position' => null]);
+
             foreach ($valid as $position => $taskId) {
                 Task::where('id', $taskId)
                     ->where('task_list_id', $this->taskList->id)

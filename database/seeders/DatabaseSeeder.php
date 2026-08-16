@@ -34,20 +34,33 @@ class DatabaseSeeder extends Seeder
             })
             ->create();
 
-        Task::factory(25)
-            ->state(function () use ($users, $task_lists) {
-                $user = $users->random();
+        // Assign a stable position per (user, list) so ORDER BY position is deterministic.
+        foreach ($users as $user) {
+            $userLists = $task_lists->where('user_id', $user->id)->values();
+            foreach ($userLists as $list) {
+                // Insert with a unique high offset per row so the (task_list_id, position)
+                // unique constraint never collides while seeding; we'll overwrite position below.
+                $baseOffset = ($list->id * 1000) + 100000;
 
-                $availableLists = $task_lists
-                    ->where('user_id', $user->id);
+                $created = collect();
+                for ($i = 0; $i < 5; $i++) {
+                    $created->push(
+                        Task::factory()
+                            ->state([
+                                'user_id' => $user->id,
+                                'task_list_id' => $list->id,
+                                'position' => $baseOffset + $i,
+                            ])
+                            ->create()
+                    );
+                }
 
-                return [
-                    'user_id' => $user->id,
-                    'task_list_id' => $availableLists->isNotEmpty()
-                        ? $availableLists->random()->id
-                        : null,
-                ];
-            })
-            ->create();
+                $created->each(function (Task $task, int $i) {
+                    // Position is 1-indexed within (task_list_id).
+                    $task->position = $i + 1;
+                    $task->save();
+                });
+            }
+        }
     }
 }
