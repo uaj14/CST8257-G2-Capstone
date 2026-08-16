@@ -34,11 +34,6 @@
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
                     draggable="true"
-                    x-bind:class="{
-                        'opacity-50 scale-95': draggingId === {{ $task->id }},
-                        'border-t-blue-500 dark:border-t-blue-400': indicatorId === {{ $task->id }} && indicatorSide === 'top',
-                        'border-b-blue-500 dark:border-b-blue-400': indicatorId === {{ $task->id }} && indicatorSide === 'bottom',
-                    }"
                 >
                     <div class="flex-shrink-0 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
                         <flux:icon name="bars-3" class="size-5" />

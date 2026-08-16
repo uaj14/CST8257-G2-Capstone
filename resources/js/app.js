@@ -5,8 +5,8 @@
 window.taskReorder = function (initialIds) {
     return {
         draggingId: null,
-        indicatorId: null,     // card the drag is currently over
-        indicatorSide: null,   // 'top' = insert before, 'bottom' = insert after
+        indicatorElement: null,
+        indicatorSide: null,
         order: initialIds,
 
         // Returns the card under the pointer plus the insertion side:
@@ -40,8 +40,28 @@ window.taskReorder = function (initialIds) {
             return { id: chosen, side };
         },
 
+        showIndicator(id, side) {
+            const card = this.$root.querySelector(`[data-task-id="${id}"]`);
+
+            if (!card || (this.indicatorElement === card && this.indicatorSide === side)) {
+                return;
+            }
+
+            this.clearIndicator();
+
+            // CSS renders an independent pseudo-element bar from this data
+            // attribute. This avoids Flux's card-border cascade entirely.
+            card.dataset.dropIndicator = side;
+            this.indicatorElement = card;
+            this.indicatorSide = side;
+        },
+
         clearIndicator() {
-            this.indicatorId = null;
+            if (this.indicatorElement) {
+                delete this.indicatorElement.dataset.dropIndicator;
+            }
+
+            this.indicatorElement = null;
             this.indicatorSide = null;
         },
 
@@ -66,8 +86,7 @@ window.taskReorder = function (initialIds) {
 
             const res = this.resolveCardAt(event.clientY);
             if (res && res.id !== this.draggingId) {
-                this.indicatorId = res.id;
-                this.indicatorSide = res.side;
+                this.showIndicator(res.id, res.side);
             } else {
                 this.clearIndicator();
             }
