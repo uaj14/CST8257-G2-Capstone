@@ -1,11 +1,13 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "group-2/multitasker",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "A focused task-management application built with Laravel and Livewire.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "productivity",
+        "task-management"
     ],
     "license": "MIT",
     "require": {

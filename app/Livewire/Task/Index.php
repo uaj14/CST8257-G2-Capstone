@@ -88,4 +88,85 @@ class Index extends Component
             'tasks' => $tasks,
         ]);
     }
+
+    public function complete(Task $task): void
+    {
+        $this->authorize('update', $task);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
+        $task->update(['completed_at' => now()]);
+
+        Flux::toast('Task completed.');
+        $this->dispatch('task-updated');
+    }
+
+    public function reopen(Task $task): void
+    {
+        $this->authorize('update', $task);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
+        $task->update(['completed_at' => null]);
+
+        Flux::toast('Task reopened.');
+        $this->dispatch('task-updated');
+    }
+
+    public function archive(Task $task): void
+    {
+        $this->authorize('update', $task);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
+        $task->delete();
+
+        Flux::toast('Task archived.');
+        $this->dispatch('task-updated');
+    }
+
+    public function restore(int $taskId): void
+    {
+        $task = Task::onlyTrashed()->findOrFail($taskId);
+
+        $this->authorize('update', $task);
+        $this->authorize('view', $this->taskList);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
+        $task->restore();
+
+        Flux::toast('Task restored.');
+        $this->dispatch('task-updated');
+    }
+
+    public function forceDelete(int $taskId): void
+    {
+        $task = Task::onlyTrashed()->findOrFail($taskId);
+
+        $this->authorize('update', $task);
+        $this->authorize('view', $this->taskList);
+
+        abort_unless(
+            $task->task_list_id === $this->taskList->id,
+            404
+        );
+
+        $task->forceDelete();
+
+        Flux::toast('Task permanently deleted.');
+        $this->dispatch('task-updated');
+    }
 }
