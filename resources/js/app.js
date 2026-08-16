@@ -5,29 +5,106 @@
 window.taskReorder = function (initialIds) {
     return {
         draggingId: null,
+        indicatorId: null,     // card the drag is currently over
+        indicatorSide: null,   // 'top' = insert before, 'bottom' = insert after
         order: initialIds,
 
-        onDragStart(event, id) {
-            this.draggingId = id;
+        // Returns the card under the pointer plus the insertion side:
+        // pointer in the top half of a card => 'top' (insert before it),
+        // bottom half => 'bottom' (insert after it). Handles the gaps
+        // between cards by snapping to the nearest card above/below.
+        resolveCardAt(clientY) {
+            const cards = [...this.$root.querySelectorAll('[data-task-id]')];
+            if (cards.length === 0) {
+                return null;
+            }
+
+            let chosen = null;
+            let side = 'top';
+
+            for (const card of cards) {
+                const rect = card.getBoundingClientRect();
+                if (clientY < rect.top) {
+                    break; // above this card; keep previous choice
+                }
+                chosen = Number(card.getAttribute('data-task-id'));
+                side = clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
+            }
+
+            if (chosen === null) {
+                // Above the first card
+                chosen = Number(cards[0].getAttribute('data-task-id'));
+                side = 'top';
+            }
+
+            return { id: chosen, side };
+        },
+
+        clearIndicator() {
+            this.indicatorId = null;
+            this.indicatorSide = null;
+        },
+
+        onDragStart(event) {
+            const card = event.target.closest('[data-task-id]');
+            if (!card) {
+                return;
+            }
+
+            this.draggingId = Number(card.getAttribute('data-task-id'));
             event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', String(id));
+            event.dataTransfer.setData('text/plain', String(this.draggingId));
         },
 
-        onDragOver(event, overId) {
-            if (this.draggingId === null || this.draggingId === overId) return;
+        onDragOver(event) {
+            if (this.draggingId === null) {
+                return;
+            }
+
+            event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
+
+            const res = this.resolveCardAt(event.clientY);
+            if (res && res.id !== this.draggingId) {
+                this.indicatorId = res.id;
+                this.indicatorSide = res.side;
+            } else {
+                this.clearIndicator();
+            }
         },
 
-        onDrop(event, dropOnId) {
-            if (this.draggingId === null || this.draggingId === dropOnId) return;
+        onDrop(event) {
+            if (this.draggingId === null) {
+                return;
+            }
+
             event.preventDefault();
 
-            const from = this.order.indexOf(this.draggingId);
-            const to   = this.order.indexOf(dropOnId);
-            if (from === -1 || to === -1) return;
+            const res = this.resolveCardAt(event.clientY);
 
+            if (!res || res.id === this.draggingId) {
+                // Dropped back onto itself or outside any card
+                this.clearIndicator();
+                this.draggingId = null;
+                return;
+            }
+
+            const from = this.order.indexOf(this.draggingId);
+            if (from === -1) {
+                this.clearIndicator();
+                this.draggingId = null;
+                return;
+            }
+
+            // Remove the dragged item, then insert before/after the target.
             const moved = this.order.splice(from, 1)[0];
+            let to = this.order.indexOf(res.id);
+            if (res.side === 'bottom') {
+                to += 1;
+            }
             this.order.splice(to, 0, moved);
+
+            this.clearIndicator();
 
             // $wire is not a global; it's an Alpine magic exposed on `this`
             // by Livewire's Alpine plugin. Using the bare global throws
@@ -38,6 +115,7 @@ window.taskReorder = function (initialIds) {
 
         onDragEnd() {
             this.draggingId = null;
+            this.clearIndicator();
         },
     };
 };
@@ -46,10 +124,8 @@ window.taskReorder = function (initialIds) {
 // Per the HTML5 spec, draggable is only native-draggable when the attribute
 // value is exactly "true". Laravel/Blaze folds `draggable="true"` on Blade
 // component tags into `draggable="draggable"` — which the browser reads as
-// NOT draggable. Alpine's init() fixes this on first boot, but Livewire
-// morphs create NEW DOM nodes on every update, and init() never re-runs.
-// Hook into Livewire's morph lifecycle so every card stays draggable across
-// re-order responses.
+// NOT draggable. Livewire morphs create NEW DOM nodes on every update, so
+// hook into Livewire's morph lifecycle and re-apply the property each time.
 (function () {
     function makeCardsDraggable() {
         document.querySelectorAll('[data-task-id]').forEach(function (el) {

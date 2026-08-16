@@ -1,6 +1,10 @@
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl"
      x-data="taskReorder(@js($tasks->pluck('id')->all()))"
-     @task-reordered.window="reorder($event.detail.ids)">
+     @task-reordered.window="reorder($event.detail.ids)"
+     x-on:dragstart="onDragStart($event)"
+     x-on:dragover.prevent="onDragOver($event)"
+     x-on:drop="onDrop($event)"
+     x-on:dragend="onDragEnd($event)">
     <div class="flex items-center justify-between">
         <div>
             <flux:breadcrumbs>
@@ -26,15 +30,15 @@
         <div class="flex flex-col gap-3" x-ref="list">
             @foreach($tasks as $task)
                 <flux:card
-                    class="group flex cursor-grab items-start gap-4 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500"
+                    class="group relative flex cursor-grab items-start gap-4 transition duration-150 border-t-4 border-b-4 border-transparent hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
                     draggable="true"
-                    x-on:dragstart="onDragStart($event, {{ $task->id }})"
-                    x-on:dragover.prevent="onDragOver($event, {{ $task->id }})"
-                    x-on:drop="onDrop($event, {{ $task->id }})"
-                    x-on:dragend="onDragEnd($event)"
-                    x-bind:class="{ 'opacity-50 scale-95': draggingId === {{ $task->id }} }"
+                    x-bind:class="{
+                        'opacity-50 scale-95': draggingId === {{ $task->id }},
+                        'border-t-blue-500 dark:border-t-blue-400': indicatorId === {{ $task->id }} && indicatorSide === 'top',
+                        'border-b-blue-500 dark:border-b-blue-400': indicatorId === {{ $task->id }} && indicatorSide === 'bottom',
+                    }"
                 >
                     <div class="flex-shrink-0 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
                         <flux:icon name="bars-3" class="size-5" />
