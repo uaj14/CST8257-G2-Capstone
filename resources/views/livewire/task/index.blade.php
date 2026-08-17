@@ -48,14 +48,6 @@
         </div>
     </div>
 
-    @php
-        $priorityLabels = [0 => 'Low', 1 => 'Medium', 2 => 'High'];
-        $priorityColors = [0 => 'bg-green-100 text-green-800 dark:bg-green-400/10 dark:text-green-300', 1 => 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200', 2 => 'bg-red-100 text-red-800 dark:bg-red-400/10 dark:text-red-200'];
-        $activeTasks = $tasks->filter(fn($task) => !$task->completed_at && !$task->trashed());
-        $completedTasks = $tasks->filter(fn($task) => (bool) $task->completed_at && !$task->trashed());
-        $archivedTasks = $tasks->filter(fn($task) => $task->trashed());
-    @endphp
-
     @if($tasks->isEmpty())
         <div class="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700 p-12 text-center">
             <p class="text-neutral-500 dark:text-neutral-400">No tasks match this view.</p>
@@ -63,32 +55,25 @@
     @else
         <div class="flex flex-col gap-3" x-ref="list">
             @foreach($tasks as $task)
-                @php
-                    $isCompleted = (bool) $task->completed_at;
-                    $isArchived = $task->trashed();
-                    $isDraggable = !$isCompleted && !$isArchived;
-                @endphp
                 <flux:card
-                    class="group relative flex items-start gap-4 transition duration-150 border-t-4 border-b-4 border-transparent {{ $isDraggable ? 'cursor-grab hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800/70' : 'opacity-75' }}"
+                    class="group relative flex items-start gap-4 transition duration-150 border-t-4 border-b-4 border-transparent hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800/70"
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
-                    @if($isDraggable) draggable="true" @endif
+                    draggable="true"
                 >
-                    @if($isDraggable)
-                        <div class="flex-shrink-0 pt-0.5 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
-                            <flux:icon name="bars-3" class="size-5" />
-                        </div>
-                    @endif
+                    <div class="flex-shrink-0 pt-0.5 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
+                        <flux:icon name="bars-3" class="size-5" />
+                    </div>
                     <div class="flex-1 min-w-0"
-                         @if($isDraggable) x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })" @endif>
+                         x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100 {{ $isCompleted ? 'line-through decoration-neutral-400' : '' }}">
+                            <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100 {{ (bool) $task->completed_at ? 'line-through decoration-neutral-400' : '' }}">
                                 {{ $task->name }}
                             </span>
                             <flux:badge size="sm" class="{{ $priorityColors[$task->priority] ?? '' }}">
                                 {{ $priorityLabels[$task->priority] ?? 'Medium' }}
                             </flux:badge>
-                            @if($isArchived)
+                            @if($task->trashed())
                                 <flux:badge size="sm" class="bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">Archived</flux:badge>
                             @endif
                         </div>
@@ -104,8 +89,8 @@
                         @endif
                     </div>
                     <div class="flex items-center gap-2">
-                        @if(!$isArchived)
-                            @if(!$isCompleted)
+                        @if(!$task->trashed())
+                            @if(!$task->completed_at)
                                 <flux:button size="sm" variant="primary" wire:click="complete({{ $task->id }})" icon="check">
                                     Complete
                                 </flux:button>
@@ -119,11 +104,11 @@
                             <flux:dropdown>
                                 <flux:button variant="ghost" size="sm" icon="ellipsis-vertical" />
                                 <flux:menu>
-                                    @if(!$isArchived)
+                                    @if(!$task->trashed())
                                         <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                             Edit
                                         </flux:menu.item>
-                                        @if(!$isCompleted)
+                                        @if(!$task->completed_at)
                                             <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
                                                 Archive
                                             </flux:menu.item>
