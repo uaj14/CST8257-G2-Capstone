@@ -22,10 +22,10 @@
                     wire:key="{{ $taskList->id }}"
                     style="border-left-color: {{ $borderColor }}"
                 >
-                    <div class="flex items-start justify-between">
+                    <div class="flex min-w-0 items-start justify-between">
                         <a
                             href="{{ route('tasks.index', $taskList) }}"
-                            class="text-lg font-medium text-neutral-900 dark:text-neutral-100 after:absolute after:inset-0 after:content-['']"
+                            class="truncate text-lg font-medium text-neutral-900 dark:text-neutral-100 after:absolute after:inset-0 after:content-['']"
                         >
                             {{ $taskList->name }}
                         </a>
