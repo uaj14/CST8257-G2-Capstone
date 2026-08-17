@@ -4,6 +4,7 @@ namespace App\Livewire\Task;
 
 use App\Models\Task;
 use App\Models\TaskList;
+use App\Support\Tasks\TaskIndexQuery;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -60,18 +61,22 @@ class Index extends Component
             ->pluck('id')
             ->all();
 
-        // Ignore any IDs the client tries to inject that don't belong to this user/list.
-        $valid = array_values(array_intersect($orderedIds, $ownedIds));
+        $requestedIds = array_values(array_unique($orderedIds));
+        $validIds = array_values(array_intersect($requestedIds, $ownedIds));
+        $omittedIds = array_values(array_diff($ownedIds, $validIds));
+        $completeOrder = [...$validIds, ...$omittedIds];
 
-        DB::transaction(function () use ($valid): void {
+        DB::transaction(function () use ($completeOrder): void {
             // Free the unique (task_list_id, position) constraint before renumbering
             // by nulling every position in this list, then assigning sequential ones.
-            Task::where('task_list_id', $this->taskList->id)
+            Task::withTrashed()
+                ->where('task_list_id', $this->taskList->id)
                 ->update(['position' => null]);
 
-            foreach ($valid as $position => $taskId) {
+            foreach ($completeOrder as $position => $taskId) {
                 Task::where('id', $taskId)
                     ->where('task_list_id', $this->taskList->id)
+                    ->where('user_id', auth()->id())
                     ->update(['position' => $position + 1]);
             }
         });
@@ -83,7 +88,7 @@ class Index extends Component
 
     public string $search = '';
 
-    public string $filter = 'all';
+    public string $filter = 'active';
 
     public string $sort = 'position';
 
@@ -110,34 +115,13 @@ class Index extends Component
 
     public function render(): View
     {
-        $query = $this->taskList->tasks()
-            ->where('user_id', auth()->id());
-
-        if ($this->filter === 'active') {
-            $query->whereNull('completed_at')->whereNull('deleted_at');
-        } elseif ($this->filter === 'completed') {
-            $query->whereNotNull('completed_at')->whereNull('deleted_at');
-        } elseif ($this->filter === 'archived') {
-            $query->onlyTrashed();
-        } else {
-            $query->withTrashed();
-        }
-
-        if ($this->search !== '') {
-            $query->where(function ($q) {
-                $q->where('name', 'like', '%'.$this->search.'%')
-                    ->orWhere('description', 'like', '%'.$this->search.'%');
-            });
-        }
-
-        match ($this->sort) {
-            'priority' => $query->orderByDesc('priority'),
-            'deadline' => $query->orderBy('deadline'),
-            'name' => $query->orderBy('name'),
-            default => $query->orderBy('position'),
-        };
-
-        $tasks = $query->get();
+        $tasks = (new TaskIndexQuery(
+            $this->taskList,
+            (int) auth()->id(),
+            $this->filter,
+            $this->sort,
+            $this->search,
+        ))->get();
 
         return view('livewire.task.index', [
             'tasks' => $tasks,
