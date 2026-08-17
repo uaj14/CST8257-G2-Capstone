@@ -46,7 +46,8 @@ class TaskIndexQuery
         } elseif ($this->filter === 'upcoming') {
             $query->dueWithin();
         } else {
-            $query->withTrashed();
+            // 'all' — active + completed tasks only; SoftDeletes' global scope
+            // excludes archived (soft-deleted) records automatically.
         }
 
         if ($this->search !== '') {
