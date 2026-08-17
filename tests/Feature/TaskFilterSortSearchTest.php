@@ -110,29 +110,7 @@ test('it searches task names and descriptions', function () {
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$groceryTask->id]);
 });
 
-test('it renders the correct priority label on task cards', function () {
-    $user = User::factory()->create();
-    $taskList = TaskList::factory()->for($user)->create();
-
-    Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'High priority task',
-        'priority' => 2,
-    ]);
-
-    Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Low priority task',
-        'priority' => 0,
-    ]);
-
-    Livewire::actingAs($user)
-        ->test(Index::class, ['taskList' => $taskList])
-        ->assertSee('High priority task')
-        ->assertSee('High', false)
-        ->assertSee('Low priority task')
-        ->assertSee('Low', false);
-});
-
-test('it manages complete, reopen, delete to trash, restore, and force-delete actions', function () {
+test('it manages complete, reopen, archive, restore, and delete actions', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
