@@ -1,6 +1,9 @@
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Task Lists</h1>
+        <div>
+            <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Task Lists</h1>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Select a list or create a new one.</p>
+        </div>
         <flux:button wire:click="$dispatch('open-create-task-list')" variant="primary">
             New List
         </flux:button>
@@ -13,9 +16,11 @@
     @else
         <div class="grid auto-rows-min gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($taskLists as $taskList)
+                @php $borderColor = \App\Models\TaskList::COLORS[$taskList->color ?? \App\Models\TaskList::defaultColor()] ?? '#3b82f6'; @endphp
                 <flux:card
-                    class="group relative flex flex-col gap-3 transition duration-150 hover:border-neutral-400 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800 dark:hover:border-neutral-500"
+                    class="group relative flex flex-col gap-3 transition duration-150 border-l-4 hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800"
                     wire:key="{{ $taskList->id }}"
+                    style="border-left-color: {{ $borderColor }}"
                 >
                     <div class="flex items-start justify-between">
                         <a
