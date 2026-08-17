@@ -83,17 +83,21 @@
                             </p>
                         @endif
                         @if($task->deadline)
-                            <div class="mt-1 flex items-center gap-2">
-                                <p class="text-xs {{ $task->isOverdue() ? 'text-red-500 dark:text-red-400' : 'text-neutral-400 dark:text-neutral-500' }}">
-                                    Due {{ $task->deadline->format('M j, Y') }}
-                                </p>
-                                @if($task->isOverdue())
-                                    <flux:badge size="sm" class="bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300">Overdue</flux:badge>
-                                @endif
-                                @if($task->isDueSoon())
-                                    <flux:badge size="sm" class="bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300">Due soon</flux:badge>
-                                @endif
-                            </div>
+                            @php
+                                $dueText = $task->isOverdue()
+                                    ? 'Overdue · '.$task->deadline->format('M j, Y')
+                                    : ($task->isDueSoon()
+                                        ? 'Due soon · '.$task->deadline->format('M j, Y')
+                                        : 'Due '.$task->deadline->format('M j, Y'));
+                                $dueClass = $task->isOverdue()
+                                    ? 'text-red-500 dark:text-red-400 font-medium'
+                                    : ($task->isDueSoon()
+                                        ? 'text-amber-600 dark:text-amber-400 font-medium'
+                                        : 'text-neutral-400 dark:text-neutral-500');
+                            @endphp
+                            <p class="mt-1 text-xs {{ $dueClass }}">
+                                {{ $dueText }}
+                            </p>
                         @endif
                     </div>
                     <div class="flex items-center gap-2">

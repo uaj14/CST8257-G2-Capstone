@@ -41,6 +41,10 @@ class TaskIndexQuery
             $query->whereNotNull('completed_at')->whereNull('deleted_at');
         } elseif ($this->filter === 'archived') {
             $query->onlyTrashed();
+        } elseif ($this->filter === 'overdue') {
+            $query->overdue();
+        } elseif ($this->filter === 'upcoming') {
+            $query->upcoming();
         } else {
             $query->withTrashed();
         }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\TaskFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,35 @@ class Task extends Model
         2 => 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
     ];
 
+    public const DUE_SOON_DAYS = 7;
+
+    /**
+     * Scope the query to incomplete tasks whose deadline is in the past.
+     *
+     * @param  Builder<Task>  $query
+     * @return Builder<Task>
+     */
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->whereNotNull('deadline')
+            ->whereNull('completed_at')
+            ->whereDate('deadline', '<', today());
+    }
+
+    /**
+     * Scope the query to incomplete tasks whose deadline is today or within the next days.
+     *
+     * @param  Builder<Task>  $query
+     * @return Builder<Task>
+     */
+    public function scopeUpcoming(Builder $query, int $days = self::DUE_SOON_DAYS): Builder
+    {
+        return $query->whereNotNull('deadline')
+            ->whereNull('completed_at')
+            ->whereDate('deadline', '>=', today())
+            ->whereDate('deadline', '<=', today()->addDays($days));
+    }
+
     public function isOverdue(): bool
     {
         return $this->deadline !== null
@@ -34,7 +64,7 @@ class Task extends Model
             && $this->deadline->isBefore(today());
     }
 
-    public function isDueSoon(int $days = 3): bool
+    public function isDueSoon(int $days = self::DUE_SOON_DAYS): bool
     {
         return $this->deadline !== null
             && $this->completed_at === null
