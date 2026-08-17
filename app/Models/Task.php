@@ -15,6 +15,18 @@ class Task extends Model
 
     use SoftDeletes;
 
+    public const PRIORITY_LABELS = [
+        0 => 'Low',
+        1 => 'Medium',
+        2 => 'High',
+    ];
+
+    public const PRIORITY_COLORS = [
+        0 => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
+        1 => 'bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300',
+        2 => 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+    ];
+
     protected $fillable = [
         'user_id',
         'task_list_id',

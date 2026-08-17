@@ -60,18 +60,22 @@ class Index extends Component
             ->pluck('id')
             ->all();
 
-        // Ignore any IDs the client tries to inject that don't belong to this user/list.
-        $valid = array_values(array_intersect($orderedIds, $ownedIds));
+        $requestedIds = array_values(array_unique($orderedIds));
+        $validIds = array_values(array_intersect($requestedIds, $ownedIds));
+        $omittedIds = array_values(array_diff($ownedIds, $validIds));
+        $completeOrder = [...$validIds, ...$omittedIds];
 
-        DB::transaction(function () use ($valid): void {
+        DB::transaction(function () use ($completeOrder): void {
             // Free the unique (task_list_id, position) constraint before renumbering
             // by nulling every position in this list, then assigning sequential ones.
-            Task::where('task_list_id', $this->taskList->id)
+            Task::withTrashed()
+                ->where('task_list_id', $this->taskList->id)
                 ->update(['position' => null]);
 
-            foreach ($valid as $position => $taskId) {
+            foreach ($completeOrder as $position => $taskId) {
                 Task::where('id', $taskId)
                     ->where('task_list_id', $this->taskList->id)
+                    ->where('user_id', auth()->id())
                     ->update(['position' => $position + 1]);
             }
         });
@@ -111,6 +115,7 @@ class Index extends Component
     public function render(): View
     {
         $query = $this->taskList->tasks()
+            ->reorder()
             ->where('user_id', auth()->id());
 
         if ($this->filter === 'active') {

@@ -47,39 +47,44 @@ test('it filters tasks by active, completed, archived, and all views', function 
         ]);
 });
 
-test('it sorts tasks by priority, deadline, and name', function () {
+test('it sorts tasks by position, priority, deadline, and name', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
+    // Fixture where every sort option disagrees:
+    // Zulu: position 1, priority Medium, deadline latest
+    // Bravo: position 2, priority Low, deadline earliest
+    // Alpha: position 3, priority High, deadline middle
     Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Zulu task',
-        'priority' => 0,
-        'deadline' => '2026-12-20',
-        'position' => 3,
-    ]);
-
-    Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Alpha task',
-        'priority' => 2,
-        'deadline' => '2026-12-10',
+        'name' => 'Zulu',
+        'priority' => 1,
+        'deadline' => '2025-12-20',
         'position' => 1,
     ]);
 
     Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Bravo task',
-        'priority' => 1,
-        'deadline' => '2026-12-15',
+        'name' => 'Bravo',
+        'priority' => 0,
+        'deadline' => '2025-12-10',
         'position' => 2,
+    ]);
+
+    Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'Alpha',
+        'priority' => 2,
+        'deadline' => '2025-12-15',
+        'position' => 3,
     ]);
 
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Zulu', 'Bravo', 'Alpha'])
         ->set('sort', 'priority')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task'])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha', 'Zulu', 'Bravo'])
         ->set('sort', 'deadline')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task'])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Bravo', 'Alpha', 'Zulu'])
         ->set('sort', 'name')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task']);
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha', 'Bravo', 'Zulu']);
 });
 
 test('it searches task names and descriptions', function () {
@@ -102,6 +107,28 @@ test('it searches task names and descriptions', function () {
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$invoiceTask->id])
         ->set('search', 'Milk')
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$groceryTask->id]);
+});
+
+test('it renders the correct priority label on task cards', function () {
+    $user = User::factory()->create();
+    $taskList = TaskList::factory()->for($user)->create();
+
+    Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'High priority task',
+        'priority' => 2,
+    ]);
+
+    Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'Low priority task',
+        'priority' => 0,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(Index::class, ['taskList' => $taskList])
+        ->assertSee('High priority task')
+        ->assertSee('High', false)
+        ->assertSee('Low priority task')
+        ->assertSee('Low', false);
 });
 
 test('it manages complete, reopen, archive, restore, and delete actions', function () {

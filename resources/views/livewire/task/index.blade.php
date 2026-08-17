@@ -39,7 +39,7 @@
         </div>
         <div class="flex w-full gap-2 sm:w-auto">
             <flux:input wire:model.live="search" placeholder="Search tasks..." icon="magnifying-glass" class="w-full sm:w-56" />
-            <flux:select wire:model="sort" size="sm" class="w-full sm:w-40">
+            <flux:select wire:model.live="sort" size="sm" class="w-full sm:w-40">
                 <option value="position">Sort: Default</option>
                 <option value="priority">Sort: Priority</option>
                 <option value="deadline">Sort: Deadline</option>
@@ -70,8 +70,8 @@
                             <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100 {{ (bool) $task->completed_at ? 'line-through decoration-neutral-400' : '' }}">
                                 {{ $task->name }}
                             </span>
-                            <flux:badge size="sm" class="{{ $priorityColors[$task->priority] ?? '' }}">
-                                {{ $priorityLabels[$task->priority] ?? 'Medium' }}
+                            <flux:badge size="sm" class="{{ \App\Models\Task::PRIORITY_COLORS[$task->priority] ?? '' }}">
+                                {{ \App\Models\Task::PRIORITY_LABELS[$task->priority] ?? 'Medium' }}
                             </flux:badge>
                             @if($task->trashed())
                                 <flux:badge size="sm" class="bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">Archived</flux:badge>
