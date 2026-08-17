@@ -9,6 +9,12 @@ window.taskReorder = function (initialIds) {
         indicatorSide: null,
         order: initialIds,
 
+        syncOrderFromDom() {
+            this.order = [...this.$root.querySelectorAll('[data-task-id]')].map(function (el) {
+                return Number(el.getAttribute('data-task-id'));
+            });
+        },
+
         // Returns the card under the pointer plus the insertion side:
         // pointer in the top half of a card => 'top' (insert before it),
         // bottom half => 'bottom' (insert after it). Handles the gaps
@@ -71,6 +77,7 @@ window.taskReorder = function (initialIds) {
                 return;
             }
 
+            this.syncOrderFromDom();
             this.draggingId = Number(card.getAttribute('data-task-id'));
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', String(this.draggingId));
@@ -98,6 +105,7 @@ window.taskReorder = function (initialIds) {
             }
 
             event.preventDefault();
+            this.syncOrderFromDom();
 
             const res = this.resolveCardAt(event.clientY);
 
@@ -152,15 +160,64 @@ window.taskReorder = function (initialIds) {
         });
     }
 
-    // Run immediately on initial load (before Livewire might be loaded)
-    makeCardsDraggable();
+    function syncOrder() {
+        const roots = document.querySelectorAll('[x-data*="taskReorder"]');
+        roots.forEach(function (root) {
+            const ids = [...root.querySelectorAll('[data-task-id]')].map(function (el) {
+                return Number(el.getAttribute('data-task-id'));
+            });
+            let data = null;
 
-    // Then hook into every subsequent Livewire morph
+            if (window.Alpine && typeof window.Alpine.$data === 'function') {
+                try {
+                    data = window.Alpine.$data(root);
+                } catch (error) {
+                    data = null;
+                }
+            }
+
+            if (!data && root._x_dataStack && root._x_dataStack[0]) {
+                data = root._x_dataStack[0];
+            }
+
+            if (data && Array.isArray(data.order)) {
+                data.order = ids;
+            }
+        });
+    }
+
+    function afterMorph() {
+        makeCardsDraggable();
+        syncOrder();
+    }
+
+    // Run immediately on initial load (before Livewire might be loaded)
+    afterMorph();
+
+    // Then hook into every subsequent Livewire response/morph.
+    function registerLivewireHooks() {
+        if (!window.Livewire) {
+            return;
+        }
+
+        if (typeof window.Livewire.interceptMessage === 'function') {
+            window.Livewire.interceptMessage(function ({ onSuccess }) {
+                onSuccess(function () {
+                    queueMicrotask(afterMorph);
+                });
+            });
+        }
+
+        if (typeof window.Livewire.hook === 'function') {
+            window.Livewire.hook('morph.updated', function () { afterMorph(); });
+        }
+    }
+
     if (typeof window.Livewire !== 'undefined') {
-        window.Livewire.hook('morph.updated', function () { makeCardsDraggable(); });
+        registerLivewireHooks();
     } else {
         document.addEventListener('livewire:init', function () {
-            window.Livewire.hook('morph.updated', function () { makeCardsDraggable(); });
+            registerLivewireHooks();
         });
     }
 })();
