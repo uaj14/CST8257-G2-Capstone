@@ -6,6 +6,7 @@ use App\Models\Task;
 use App\Models\TaskList;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -79,6 +80,12 @@ class Index extends Component
 
     public string $quickName = '';
 
+    public string $search = '';
+
+    public string $filter = 'all';
+
+    public string $sort = 'position';
+
     public function quickAdd(): void
     {
         $this->validate([
@@ -87,7 +94,7 @@ class Index extends Component
 
         $maxPosition = $this->taskList->tasks()->max('position') ?? 0;
 
-        auth()->user()->tasks()->create([
+        Auth::user()->tasks()->create([
             'task_list_id' => $this->taskList->id,
             'name' => trim($this->quickName),
             'priority' => 1,
@@ -102,10 +109,34 @@ class Index extends Component
 
     public function render(): View
     {
-        $tasks = $this->taskList->tasks()
-            ->where('user_id', auth()->id())
-            ->orderBy('position')
-            ->get();
+        $query = $this->taskList->tasks()
+            ->where('user_id', auth()->id());
+
+        if ($this->filter === 'active') {
+            $query->whereNull('completed_at')->whereNull('deleted_at');
+        } elseif ($this->filter === 'completed') {
+            $query->whereNotNull('completed_at')->whereNull('deleted_at');
+        } elseif ($this->filter === 'archived') {
+            $query->onlyTrashed();
+        } else {
+            $query->withTrashed();
+        }
+
+        if ($this->search !== '') {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('description', 'like', '%'.$this->search.'%');
+            });
+        }
+
+        match ($this->sort) {
+            'priority' => $query->orderByDesc('priority'),
+            'deadline' => $query->orderBy('deadline'),
+            'name' => $query->orderBy('name'),
+            default => $query->orderBy('position'),
+        };
+
+        $tasks = $query->get();
 
         return view('livewire.task.index', [
             'tasks' => $tasks,

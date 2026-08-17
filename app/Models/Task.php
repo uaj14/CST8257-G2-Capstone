@@ -12,6 +12,7 @@ class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected $fillable = [
