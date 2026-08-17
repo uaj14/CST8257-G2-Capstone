@@ -48,18 +48,26 @@ class TaskPolicy
     }
 
     /**
-     * Restoring tasks is not supported.
+     * Allow the user to archive their own task.
      */
-    public function restore(User $user, Task $task): bool
+    public function archive(User $user, Task $task): bool
     {
-        return false;
+        return $user->id === $task->user_id;
     }
 
     /**
-     * Permanently deleting tasks is not supported.
+     * Allow the user to restore their own archived task.
+     */
+    public function restore(User $user, Task $task): bool
+    {
+        return $user->id === $task->user_id;
+    }
+
+    /**
+     * Allow the user to permanently delete their own archived task.
      */
     public function forceDelete(User $user, Task $task): bool
     {
-        return false;
+        return $user->id === $task->user_id;
     }
 }

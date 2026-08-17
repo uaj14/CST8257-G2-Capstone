@@ -23,16 +23,43 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-brand-50: #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-200: #c7d2fe;
+    --color-brand-300: #a5b4fc;
+    --color-brand-400: #818cf8;
+    --color-brand-500: #6366f1;
+    --color-brand-600: #4f46e5;
+    --color-brand-700: #4338ca;
+    --color-brand-800: #3730a3;
+    --color-brand-900: #312e81;
+    --color-brand-950: #1e1b4b;
+
+    --color-accent: var(--color-brand-600);
+    --color-accent-content: var(--color-brand-600);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-brand-400);
+        --color-accent-content: var(--color-brand-400);
+        --color-accent-foreground: var(--color-brand-950);
+    }
+}
+
+@layer base {
+    html {
+        font-feature-settings: 'cv01', 'ss03';
+        scroll-behavior: smooth;
+    }
+
+    body {
+        text-rendering: optimizeLegibility;
+    }
+
+    :focus-visible {
+        outline-color: var(--color-brand-500);
     }
 }
 
@@ -45,6 +72,32 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+}
+
+[data-task-id][data-drop-indicator]::before {
+    content: '';
+    position: absolute;
+    z-index: 20;
+    left: 0.75rem;
+    right: 0.75rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: #3b82f6;
+    box-shadow: 0 0 0 2px rgb(59 130 246 / 20%);
+    pointer-events: none;
+}
+
+[data-task-id][data-drop-indicator='top']::before {
+    top: -0.5rem;
+}
+
+[data-task-id][data-drop-indicator='bottom']::before {
+    bottom: -0.5rem;
+}
+
+.dark [data-task-id][data-drop-indicator]::before {
+    background: #60a5fa;
+    box-shadow: 0 0 0 2px rgb(96 165 250 / 25%);
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
