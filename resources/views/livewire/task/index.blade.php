@@ -1,5 +1,5 @@
 <div class="flex h-full w-full flex-1 flex-col gap-5 rounded-xl"
-     x-data="taskReorder(@js($tasks->pluck('id')->all()))"
+     x-data="taskReorder(@js($tasks->reject(fn ($t) => $t->trashed())->pluck('id')->all()))"
      @task-reordered.window="reorder($event.detail.ids)"
      x-on:dragstart="onDragStart($event)"
      x-on:dragover.prevent="onDragOver($event)"
@@ -55,10 +55,14 @@
     @else
         <div class="flex flex-col gap-3" x-ref="list">
             @foreach($tasks as $task)
+                @php
+                    $isArchivedRow = $task->trashed() ? 'true' : 'false';
+                @endphp
                 <flux:card
                     class="group relative flex items-start gap-4 transition duration-150 border-t-4 border-b-4 border-transparent hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800/70"
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
+                    data-not-draggable="{{ $isArchivedRow }}"
                     draggable="true"
                 >
                     <div class="flex-shrink-0 pt-0.5 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>

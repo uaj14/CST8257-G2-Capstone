@@ -10,7 +10,7 @@ window.taskReorder = function (initialIds) {
         order: initialIds,
 
         syncOrderFromDom() {
-            this.order = [...this.$root.querySelectorAll('[data-task-id]')].map(function (el) {
+            this.order = [...this.$root.querySelectorAll('[data-task-id]:not([data-not-draggable])')].map(function (el) {
                 return Number(el.getAttribute('data-task-id'));
             });
         },
@@ -19,8 +19,9 @@ window.taskReorder = function (initialIds) {
         // pointer in the top half of a card => 'top' (insert before it),
         // bottom half => 'bottom' (insert after it). Handles the gaps
         // between cards by snapping to the nearest card above/below.
+        // Non-draggable rows (archived) are skipped as drop targets.
         resolveCardAt(clientY) {
-            const cards = [...this.$root.querySelectorAll('[data-task-id]')];
+            const cards = [...this.$root.querySelectorAll('[data-task-id]:not([data-not-draggable])')];
             if (cards.length === 0) {
                 return null;
             }
@@ -73,7 +74,7 @@ window.taskReorder = function (initialIds) {
 
         onDragStart(event) {
             const card = event.target.closest('[data-task-id]');
-            if (!card) {
+            if (!card || card.hasAttribute('data-not-draggable')) {
                 return;
             }
 
@@ -156,14 +157,17 @@ window.taskReorder = function (initialIds) {
 (function () {
     function makeCardsDraggable() {
         document.querySelectorAll('[data-task-id]').forEach(function (el) {
-            el.draggable = true;
+            // Archived rows (data-not-draggable) must never be reorderable:
+            // the server ignores them in reorder(), so dragging them would be
+            // a silent no-op.
+            el.draggable = !el.hasAttribute('data-not-draggable');
         });
     }
 
     function syncOrder() {
         const roots = document.querySelectorAll('[x-data*="taskReorder"]');
         roots.forEach(function (root) {
-            const ids = [...root.querySelectorAll('[data-task-id]')].map(function (el) {
+            const ids = [...root.querySelectorAll('[data-task-id]:not([data-not-draggable])')].map(function (el) {
                 return Number(el.getAttribute('data-task-id'));
             });
             let data = null;

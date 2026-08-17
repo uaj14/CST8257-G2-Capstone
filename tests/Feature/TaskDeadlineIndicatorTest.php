@@ -46,6 +46,7 @@ it('does not flag a completed task as overdue or upcoming', function () {
 
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
+        ->set('filter', 'all')
         ->assertSee('Completed late task')
         ->assertDontSee('Overdue ', false);
 });

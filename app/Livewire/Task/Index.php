@@ -88,7 +88,7 @@ class Index extends Component
 
     public string $search = '';
 
-    public string $filter = 'all';
+    public string $filter = 'active';
 
     public string $sort = 'position';
 

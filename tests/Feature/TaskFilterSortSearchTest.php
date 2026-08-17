@@ -6,7 +6,7 @@ use App\Models\TaskList;
 use App\Models\User;
 use Livewire\Livewire;
 
-test('it filters tasks by active, completed, archived, and all views', function () {
+test('it defaults to the active view and filters by active, completed, archived, and all', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
@@ -28,6 +28,8 @@ test('it filters tasks by active, completed, archived, and all views', function 
 
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$activeTask->id])
+        ->set('filter', 'all')
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [
             $activeTask->id,
             $completedTask->id,
