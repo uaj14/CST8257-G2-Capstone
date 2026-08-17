@@ -28,6 +28,12 @@ class Task extends Model
         2 => 'red',
     ];
 
+    public const PRIORITY_BADGE_CLASSES = [
+        0 => 'bg-zinc-50 text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200',
+        1 => 'bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200',
+        2 => 'bg-rose-50 text-rose-700 dark:bg-rose-400/10 dark:text-rose-200',
+    ];
+
     public const UPCOMING_WINDOW_DAYS = 3;
 
     /**
@@ -71,6 +77,7 @@ class Task extends Model
     public function getIsOverdueAttribute(): bool
     {
         return ! $this->completed_at
+            && ! $this->trashed()
             && $this->deadline
             && $this->deadline->lt(today());
     }
@@ -78,6 +85,7 @@ class Task extends Model
     public function getIsUpcomingAttribute(): bool
     {
         return ! $this->completed_at
+            && ! $this->trashed()
             && $this->deadline
             && ! $this->is_overdue
             && $this->deadline->lte(today()->addDays(self::UPCOMING_WINDOW_DAYS));
