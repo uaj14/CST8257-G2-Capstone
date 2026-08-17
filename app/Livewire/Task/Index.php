@@ -40,9 +40,10 @@ class Index extends Component
             404
         );
 
-        $task->delete();
+        $task->forceDelete();
 
-        Flux::toast('Task deleted.');
+        Flux::toast('Task permanently deleted.');
+        $this->dispatch('task-updated');
     }
 
     /**
