@@ -104,7 +104,7 @@ test('it searches task names and descriptions', function () {
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$groceryTask->id]);
 });
 
-test('it manages complete, reopen, archive, restore, and permanent delete actions', function () {
+test('it manages complete, reopen, archive, restore, and delete actions', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
@@ -142,4 +142,18 @@ test('it manages complete, reopen, archive, restore, and permanent delete action
         ->call('forceDelete', $task->id);
 
     expect(Task::withTrashed()->find($task->id))->toBeNull();
+
+    $duplicateNameTaskA = Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'Duplicate name task',
+    ]);
+    $duplicateNameTaskB = Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'Duplicate name task',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(Index::class, ['taskList' => $taskList])
+        ->call('delete', $duplicateNameTaskA->id);
+
+    expect(Task::withTrashed()->find($duplicateNameTaskA->id))->toBeNull()
+        ->and(Task::find($duplicateNameTaskB->id))->not->toBeNull();
 });
