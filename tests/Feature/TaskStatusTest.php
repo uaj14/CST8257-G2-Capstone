@@ -38,3 +38,13 @@ it('allows the owner to permanently delete an archived task', function () {
 
     expect(Task::withTrashed()->find($task->id))->toBeNull();
 });
+
+it('allows the owner to archive a completed task', function () {
+    $user = User::factory()->create();
+    $taskList = TaskList::factory()->for($user)->create();
+    $task = Task::factory()->for($user)->for($taskList)->create(['completed_at' => now()]);
+
+    $task->delete();
+
+    expect($task->fresh()->trashed())->toBeTrue();
+});

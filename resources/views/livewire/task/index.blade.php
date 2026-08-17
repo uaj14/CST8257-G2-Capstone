@@ -141,11 +141,9 @@
                                         <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                             Edit
                                         </flux:menu.item>
-                                        @if(!$task->completed_at)
-                                            <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
-                                                Archive
-                                            </flux:menu.item>
-                                        @endif
+                                        <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
+                                            Archive
+                                        </flux:menu.item>
                                         <flux:menu.item
                                             variant="danger"
                                             wire:click="delete({{ $task->id }})"
