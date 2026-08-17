@@ -31,7 +31,14 @@ class Index extends Component
     {
         $taskLists = auth()->user()
             ->taskLists()
-            ->withCount('tasks')
+            ->withCount([
+                'tasks',
+                'tasks as active_tasks_count' => fn ($q) => $q->active(),
+            ])
+            ->withMin(
+                ['tasks as next_due' => fn ($q) => $q->active()->whereNotNull('deadline')->whereDate('deadline', '>=', today())],
+                'deadline'
+            )
             ->latest()
             ->get();
 

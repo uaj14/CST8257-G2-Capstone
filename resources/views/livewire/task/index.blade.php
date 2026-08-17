@@ -1,21 +1,34 @@
 <div class="flex h-full w-full flex-1 flex-col gap-5 rounded-xl"
-     x-data="taskReorder(@js($tasks->pluck('id')->all()))"
+     x-data="taskReorder(@js($tasks->reject(fn ($t) => $t->trashed())->pluck('id')->all()))"
      @task-reordered.window="reorder($event.detail.ids)"
      x-on:dragstart="onDragStart($event)"
      x-on:dragover.prevent="onDragOver($event)"
      x-on:drop="onDrop($event)"
      x-on:dragend="onDragEnd($event)">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Workspace</p>
-            <h1 class="truncate text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">{{ $taskList->name }}</h1>
+    @php
+        $borderColor = \App\Models\TaskList::COLORS[$taskList->color ?? \App\Models\TaskList::defaultColor()] ?? '#6366f1';
+        $orderLabel = match ($this->sort) {
+            'priority' => 'priority',
+            'deadline' => 'deadline',
+            'name' => 'name',
+            default => 'your order',
+        };
+    @endphp
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex min-w-0 items-start gap-3">
+            <span class="mt-1.5 size-3 shrink-0 rounded-full" style="background: {{ $borderColor }}"></span>
+            <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Workspace</p>
+                <h1 class="truncate text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ $taskList->name }}</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">{{ $tasks->count() }} {{ Str::plural('task', $tasks->count()) }} · ordered by {{ $orderLabel }}</p>
+            </div>
         </div>
         <flux:button wire:click="$dispatch('open-create-task')" variant="primary" size="sm">
             Add Task
         </flux:button>
     </div>
 
-    <div class="rounded-xl border border-neutral-200/80 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[.035]">
         <div class="p-4">
             <form wire:submit="quickAdd" class="flex gap-2">
                 <flux:input
@@ -32,14 +45,16 @@
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex gap-2">
-            <flux:button size="sm" variant="filled" :class="$filter === 'all' ? 'bg-indigo-600 text-white dark:bg-indigo-500' : 'bg-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'" wire:click="$set('filter', 'all')">All</flux:button>
-            <flux:button size="sm" variant="filled" :class="$filter === 'active' ? 'bg-indigo-600 text-white dark:bg-indigo-500' : 'bg-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'" wire:click="$set('filter', 'active')">Active</flux:button>
-            <flux:button size="sm" variant="filled" :class="$filter === 'completed' ? 'bg-indigo-600 text-white dark:bg-indigo-500' : 'bg-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'" wire:click="$set('filter', 'completed')">Completed</flux:button>
-            <flux:button size="sm" variant="filled" :class="$filter === 'archived' ? 'bg-indigo-600 text-white dark:bg-indigo-500' : 'bg-white text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200'" wire:click="$set('filter', 'archived')">Archived</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'all' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'all')">All</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'active' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'active')">Active</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'overdue' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'overdue')">Overdue</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'upcoming' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'upcoming')">Due soon</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'completed' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'completed')">Completed</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'archived' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'archived')">Archived</flux:button>
         </div>
         <div class="flex w-full gap-2 sm:w-auto">
             <flux:input wire:model.live="search" placeholder="Search tasks..." icon="magnifying-glass" class="w-full sm:w-56" />
-            <flux:select wire:model="sort" size="sm" class="w-full sm:w-40">
+            <flux:select wire:model.live="sort" size="sm" class="w-full sm:w-40">
                 <option value="position">Sort: Default</option>
                 <option value="priority">Sort: Priority</option>
                 <option value="deadline">Sort: Deadline</option>
@@ -49,45 +64,65 @@
     </div>
 
     @if($tasks->isEmpty())
-        <div class="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700 p-12 text-center">
-            <p class="text-neutral-500 dark:text-neutral-400">No tasks match this view.</p>
-        </div>
-    @else
-        <div class="flex flex-col gap-3" x-ref="list">
+            @if($filter === 'archived')
+                <div class="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700 p-12 text-center">
+                    <p class="text-neutral-500 dark:text-neutral-400">No archived tasks.</p>
+                </div>
+            @else
+                <div class="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700 p-12 text-center">
+                    <p class="text-neutral-500 dark:text-neutral-400">No tasks match this view.</p>
+                </div>
+            @endif
+        @else
+            @if($filter === 'archived')
+                <div class="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800/40">
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                        Archived tasks are hidden from your active lists. <strong>Restore</strong> to bring one back.
+                    </p>
+                </div>
+            @endif
+            <div class="flex flex-col gap-3" x-ref="list">
             @foreach($tasks as $task)
-                <flux:card
-                    class="group relative flex items-start gap-4 transition duration-150 border-t-4 border-b-4 border-transparent hover:shadow-md hover:bg-neutral-50 dark:hover:bg-neutral-800/70"
+                @php
+                    $isArchivedRow = $task->trashed() ? 'true' : 'false';
+                @endphp
+                <div
+                    class="group relative flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-150 hover:border-slate-300 hover:shadow-md dark:border-white/10 dark:bg-white/[.035] dark:hover:border-white/20 dark:hover:bg-white/[.06]"
                     wire:key="{{ $task->id }}"
                     data-task-id="{{ $task->id }}"
+                    data-not-draggable="{{ $isArchivedRow }}"
                     draggable="true"
                 >
-                    <div class="flex-shrink-0 pt-0.5 text-neutral-400 dark:text-neutral-600 cursor-grab select-none" x-on:click.stop>
-                        <flux:icon name="bars-3" class="size-5" />
-                    </div>
-                    <div class="flex-1 min-w-0"
-                         x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100 {{ (bool) $task->completed_at ? 'line-through decoration-neutral-400' : '' }}">
+                    <span class="mt-1 select-none text-slate-300 dark:text-slate-600 cursor-grab" aria-hidden="true" x-on:click.stop>☷</span>
+                    <a href="{{ route('tasks.show', [$taskList, $task]) }}" wire:navigate
+                       class="min-w-0 flex-1 @if(!$task->trashed() && !$task->completed_at) cursor-pointer @endif @if($task->completed_at && !$task->trashed()) cursor-pointer @endif">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="truncate font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
                                 {{ $task->name }}
+                            </p>
+                            <span class="rounded-md px-2 py-0.5 text-xs font-semibold {{ \App\Models\Task::PRIORITY_BADGE_CLASSES[$task->priority] ?? \App\Models\Task::PRIORITY_BADGE_CLASSES[1] }}">
+                                {{ \App\Models\Task::PRIORITY_LABELS[$task->priority] ?? 'Medium' }}
                             </span>
-                            <flux:badge size="sm" class="{{ $priorityColors[$task->priority] ?? '' }}">
-                                {{ $priorityLabels[$task->priority] ?? 'Medium' }}
-                            </flux:badge>
                             @if($task->trashed())
-                                <flux:badge size="sm" class="bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">Archived</flux:badge>
+                                <span class="rounded-md bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200">In Trash</span>
                             @endif
                         </div>
                         @if($task->description)
-                            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1">
-                                {{ $task->description }}
-                            </p>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-1">{{ $task->description }}</p>
                         @endif
                         @if($task->deadline)
-                            <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-                                Due {{ $task->deadline->format('M j, Y') }}
+                            @php
+                                $dueClasses = $task->is_overdue
+                                    ? 'text-rose-600 dark:text-rose-400 font-medium'
+                                    : ($task->is_upcoming
+                                        ? 'text-amber-600 dark:text-amber-400 font-medium'
+                                        : 'text-slate-400 dark:text-slate-500');
+                            @endphp
+                            <p class="mt-2 text-xs font-medium {{ $dueClasses }}">
+                                {{ $task->is_overdue ? 'Overdue' : 'Due' }} {{ $task->deadline->format('M j, Y') }}
                             </p>
                         @endif
-                    </div>
+                    </a>
                     <div class="flex items-center gap-2">
                         @if(!$task->trashed())
                             @if(!$task->completed_at)
@@ -108,15 +143,10 @@
                                         <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                             Edit
                                         </flux:menu.item>
-                                        @if(!$task->completed_at)
-                                            <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
-                                                Archive
-                                            </flux:menu.item>
-                                        @endif
                                         <flux:menu.item
                                             variant="danger"
                                             wire:click="delete({{ $task->id }})"
-                                            wire:confirm="Permanently delete this task?"
+                                            wire:confirm="Move this task to Trash? You can restore it later."
                                         >
                                             Delete
                                         </flux:menu.item>
@@ -136,7 +166,7 @@
                             </flux:dropdown>
                         </div>
                     </div>
-                </flux:card>
+                </div>
             @endforeach
         </div>
     @endif

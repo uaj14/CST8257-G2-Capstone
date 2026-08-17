@@ -1,12 +1,13 @@
 <?php
 
 use App\Livewire\Task\Index;
+use App\Livewire\Task\Trash;
 use App\Models\Task;
 use App\Models\TaskList;
 use App\Models\User;
 use Livewire\Livewire;
 
-test('it filters tasks by active, completed, archived, and all views', function () {
+test('it defaults to the active view and filters by active, completed, archived, and all', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
@@ -28,10 +29,11 @@ test('it filters tasks by active, completed, archived, and all views', function 
 
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$activeTask->id])
+        ->set('filter', 'all')
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [
             $activeTask->id,
             $completedTask->id,
-            $archivedTask->id,
         ])
         ->set('filter', 'active')
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$activeTask->id])
@@ -43,43 +45,47 @@ test('it filters tasks by active, completed, archived, and all views', function 
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [
             $activeTask->id,
             $completedTask->id,
-            $archivedTask->id,
         ]);
 });
 
-test('it sorts tasks by priority, deadline, and name', function () {
+test('it sorts tasks by position, priority, deadline, and name', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
+    // Fixture where every sort option disagrees:
+    // Zulu: position 1, priority Medium, deadline latest
+    // Bravo: position 2, priority Low, deadline earliest
+    // Alpha: position 3, priority High, deadline middle
     Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Zulu task',
-        'priority' => 0,
-        'deadline' => '2026-12-20',
-        'position' => 3,
-    ]);
-
-    Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Alpha task',
-        'priority' => 2,
-        'deadline' => '2026-12-10',
+        'name' => 'Zulu',
+        'priority' => 1,
+        'deadline' => '2025-12-20',
         'position' => 1,
     ]);
 
     Task::factory()->for($user)->for($taskList)->create([
-        'name' => 'Bravo task',
-        'priority' => 1,
-        'deadline' => '2026-12-15',
+        'name' => 'Bravo',
+        'priority' => 0,
+        'deadline' => '2025-12-10',
         'position' => 2,
+    ]);
+
+    Task::factory()->for($user)->for($taskList)->create([
+        'name' => 'Alpha',
+        'priority' => 2,
+        'deadline' => '2025-12-15',
+        'position' => 3,
     ]);
 
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Zulu', 'Bravo', 'Alpha'])
         ->set('sort', 'priority')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task'])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha', 'Zulu', 'Bravo'])
         ->set('sort', 'deadline')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task'])
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Bravo', 'Alpha', 'Zulu'])
         ->set('sort', 'name')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha task', 'Bravo task', 'Zulu task']);
+        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('name')->all() === ['Alpha', 'Bravo', 'Zulu']);
 });
 
 test('it searches task names and descriptions', function () {
@@ -127,18 +133,25 @@ test('it manages complete, reopen, archive, restore, and delete actions', functi
 
     expect($task->fresh()->completed_at)->toBeNull();
 
+    // Delete moves the task to Trash (soft delete), recoverable via restore.
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
-        ->call('archive', $task->id)
-        ->set('filter', 'archived')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$task->id])
+        ->call('delete', $task->id);
+
+    expect($task->fresh()->trashed())->toBeTrue();
+
+    Livewire::actingAs($user)
+        ->test(Trash::class)
+        ->assertViewHas('groups', fn ($groups) => $groups->flatMap(fn ($g) => $g['tasks'])->pluck('id')->all() === [$task->id])
         ->call('restore', $task->id);
 
     expect($task->fresh()->trashed())->toBeFalse();
 
+    // Force-delete only works on trashed tasks (from the Trash view).
+    $task->delete();
+
     Livewire::actingAs($user)
-        ->test(Index::class, ['taskList' => $taskList])
-        ->call('archive', $task->id)
+        ->test(Trash::class)
         ->call('forceDelete', $task->id);
 
     expect(Task::withTrashed()->find($task->id))->toBeNull();
@@ -154,6 +167,6 @@ test('it manages complete, reopen, archive, restore, and delete actions', functi
         ->test(Index::class, ['taskList' => $taskList])
         ->call('delete', $duplicateNameTaskA->id);
 
-    expect(Task::withTrashed()->find($duplicateNameTaskA->id))->toBeNull()
+    expect($duplicateNameTaskA->fresh()->trashed())->toBeTrue()
         ->and(Task::find($duplicateNameTaskB->id))->not->toBeNull();
 });
