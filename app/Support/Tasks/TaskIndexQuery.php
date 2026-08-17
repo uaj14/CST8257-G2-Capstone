@@ -36,15 +36,15 @@ class TaskIndexQuery
             ->where('user_id', $this->userId);
 
         if ($this->filter === 'active') {
-            $query->whereNull('completed_at')->whereNull('deleted_at');
+            $query->active();
         } elseif ($this->filter === 'completed') {
-            $query->whereNotNull('completed_at')->whereNull('deleted_at');
+            $query->whereNotNull('completed_at');
         } elseif ($this->filter === 'archived') {
             $query->onlyTrashed();
         } elseif ($this->filter === 'overdue') {
             $query->overdue();
         } elseif ($this->filter === 'upcoming') {
-            $query->upcoming();
+            $query->dueWithin();
         } else {
             $query->withTrashed();
         }

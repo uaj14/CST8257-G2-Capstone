@@ -22,54 +22,65 @@ class Task extends Model
         2 => 'High',
     ];
 
-    public const PRIORITY_COLORS = [
-        0 => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
-        1 => 'bg-amber-100 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300',
-        2 => 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
+    public const PRIORITY_FLUX_COLORS = [
+        0 => 'zinc',
+        1 => 'amber',
+        2 => 'red',
     ];
 
-    public const DUE_SOON_DAYS = 7;
+    public const UPCOMING_WINDOW_DAYS = 3;
 
     /**
-     * Scope the query to incomplete tasks whose deadline is in the past.
+     * Not completed and not archived (soft-deleted).
+     *
+     * @param  Builder<Task>  $query
+     * @return Builder<Task>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNull('completed_at');
+    }
+
+    /**
+     * Active tasks whose deadline is before today.
      *
      * @param  Builder<Task>  $query
      * @return Builder<Task>
      */
     public function scopeOverdue(Builder $query): Builder
     {
-        return $query->whereNotNull('deadline')
-            ->whereNull('completed_at')
+        return $query->active()
+            ->whereNotNull('deadline')
             ->whereDate('deadline', '<', today());
     }
 
     /**
-     * Scope the query to incomplete tasks whose deadline is today or within the next days.
+     * Active tasks due today through the next days (inclusive).
      *
      * @param  Builder<Task>  $query
      * @return Builder<Task>
      */
-    public function scopeUpcoming(Builder $query, int $days = self::DUE_SOON_DAYS): Builder
+    public function scopeDueWithin(Builder $query, int $days = self::UPCOMING_WINDOW_DAYS): Builder
     {
-        return $query->whereNotNull('deadline')
-            ->whereNull('completed_at')
+        return $query->active()
+            ->whereNotNull('deadline')
             ->whereDate('deadline', '>=', today())
             ->whereDate('deadline', '<=', today()->addDays($days));
     }
 
-    public function isOverdue(): bool
+    public function getIsOverdueAttribute(): bool
     {
-        return $this->deadline !== null
-            && $this->completed_at === null
-            && $this->deadline->isBefore(today());
+        return ! $this->completed_at
+            && $this->deadline
+            && $this->deadline->lt(today());
     }
 
-    public function isDueSoon(int $days = self::DUE_SOON_DAYS): bool
+    public function getIsUpcomingAttribute(): bool
     {
-        return $this->deadline !== null
-            && $this->completed_at === null
-            && ! $this->isOverdue()
-            && $this->deadline->lte(today()->addDays($days));
+        return ! $this->completed_at
+            && $this->deadline
+            && ! $this->is_overdue
+            && $this->deadline->lte(today()->addDays(self::UPCOMING_WINDOW_DAYS));
     }
 
     protected $fillable = [

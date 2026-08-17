@@ -47,9 +47,16 @@
                             </flux:dropdown>
                         </div>
                     </div>
-                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        {{ $taskList->tasks_count }} {{ Str::plural('task', $taskList->tasks_count) }}
-                    </p>
+                    <div class="flex items-center gap-3 text-sm text-neutral-500 dark:text-neutral-400">
+                        <span>
+                            {{ $taskList->active_tasks_count }} active
+                            <span class="text-neutral-400 dark:text-neutral-600">/ {{ $taskList->tasks_count }}</span>
+                        </span>
+                        @if($taskList->next_due)
+                            <span aria-hidden="true">·</span>
+                            <span>Next due {{ \Illuminate\Support\Carbon::parse($taskList->next_due)->format('M j') }}</span>
+                        @endif
+                    </div>
                 </flux:card>
             @endforeach
         </div>

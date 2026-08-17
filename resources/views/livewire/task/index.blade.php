@@ -70,11 +70,14 @@
                             <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100 {{ (bool) $task->completed_at ? 'line-through decoration-neutral-400' : '' }}">
                                 {{ $task->name }}
                             </span>
-                            <flux:badge size="sm" class="{{ \App\Models\Task::PRIORITY_COLORS[$task->priority] ?? '' }}">
+                            <flux:badge
+                                size="sm"
+                                :color="\App\Models\Task::PRIORITY_FLUX_COLORS[$task->priority] ?? 'amber'"
+                            >
                                 {{ \App\Models\Task::PRIORITY_LABELS[$task->priority] ?? 'Medium' }}
                             </flux:badge>
                             @if($task->trashed())
-                                <flux:badge size="sm" class="bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">Archived</flux:badge>
+                                <flux:badge size="sm" color="zinc">Archived</flux:badge>
                             @endif
                         </div>
                         @if($task->description)
@@ -84,19 +87,14 @@
                         @endif
                         @if($task->deadline)
                             @php
-                                $dueText = $task->isOverdue()
-                                    ? 'Overdue · '.$task->deadline->format('M j, Y')
-                                    : ($task->isDueSoon()
-                                        ? 'Due soon · '.$task->deadline->format('M j, Y')
-                                        : 'Due '.$task->deadline->format('M j, Y'));
-                                $dueClass = $task->isOverdue()
-                                    ? 'text-red-500 dark:text-red-400 font-medium'
-                                    : ($task->isDueSoon()
+                                $dueClasses = $task->is_overdue
+                                    ? 'text-red-600 dark:text-red-400 font-medium'
+                                    : ($task->is_upcoming
                                         ? 'text-amber-600 dark:text-amber-400 font-medium'
                                         : 'text-neutral-400 dark:text-neutral-500');
                             @endphp
-                            <p class="mt-1 text-xs {{ $dueClass }}">
-                                {{ $dueText }}
+                            <p class="mt-1 text-xs {{ $dueClasses }}">
+                                {{ $task->is_overdue ? 'Overdue' : 'Due' }} {{ $task->deadline->format('M j, Y') }}
                             </p>
                         @endif
                     </div>

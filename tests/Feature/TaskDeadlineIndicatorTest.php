@@ -10,7 +10,7 @@ it('renders colored due dates and labels based on the deadline', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
-    Task::factory()->for($user)->for($taskList)->create([
+    $overdueTask = Task::factory()->for($user)->for($taskList)->create([
         'name' => 'Overdue task',
         'deadline' => now()->subDays(2)->toDateString(),
     ]);
@@ -28,14 +28,13 @@ it('renders colored due dates and labels based on the deadline', function () {
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
         ->assertSee('Overdue task')
-        ->assertSee('Overdue ·', false)
+        ->assertSee('Overdue '.$overdueTask->deadline->format('M j, Y'), false)
         ->assertSee('Upcoming task')
-        ->assertSee('Due soon ·', false)
         ->assertSee('Future task')
         ->assertSee('Due ', false);
 });
 
-it('does not flag a completed task as overdue or due soon', function () {
+it('does not flag a completed task as overdue or upcoming', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
 
@@ -48,8 +47,7 @@ it('does not flag a completed task as overdue or due soon', function () {
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
         ->assertSee('Completed late task')
-        ->assertDontSee('Overdue ·', false)
-        ->assertDontSee('Due soon ·', false);
+        ->assertDontSee('Overdue ', false);
 });
 
 it('excludes tasks without a deadline from overdue and upcoming scopes', function () {
