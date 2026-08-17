@@ -15,8 +15,40 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Task Lists') }}
+                </flux:sidebar.group>
+            </flux:sidebar.nav>
+
+            @php
+                $sidebarTaskLists = auth()->user()->taskLists()->latest()->get();
+            @endphp
+            <flux:sidebar.nav>
+                <flux:sidebar.group :heading="__('Task Lists')" class="grid">
+                    @forelse($sidebarTaskLists as $sidebarList)
+                        @php
+                            $sidebarColor = \App\Models\TaskList::COLORS[$sidebarList->color ?? \App\Models\TaskList::defaultColor()] ?? '#6366f1';
+                        @endphp
+                        <flux:sidebar.item
+                            :href="route('tasks.index', $sidebarList)"
+                            :current="request()->routeIs('tasks.index') && request()->route('taskList')?->is($sidebarList)"
+                            wire:navigate
+                        >
+                            <span class="inline-flex items-center gap-2.5">
+                                <span class="size-2.5 shrink-0 rounded-full" style="background: {{ $sidebarColor }}"></span>
+                                <span class="truncate">{{ $sidebarList->name }}</span>
+                            </span>
+                        </flux:sidebar.item>
+                    @empty
+                        <flux:sidebar.item :href="route('dashboard')" wire:navigate>
+                            No lists yet
+                        </flux:sidebar.item>
+                    @endforelse
+                </flux:sidebar.group>
+            </flux:sidebar.nav>
+
+            <flux:sidebar.nav>
+                <flux:sidebar.group class="grid">
+                    <flux:sidebar.item icon="trash" :href="route('tasks.trash')" :current="request()->routeIs('tasks.trash')" wire:navigate>
+                        {{ __('Trash') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>

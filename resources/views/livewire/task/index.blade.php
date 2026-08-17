@@ -94,8 +94,8 @@
                     draggable="true"
                 >
                     <span class="mt-1 select-none text-slate-300 dark:text-slate-600 cursor-grab" aria-hidden="true" x-on:click.stop>☷</span>
-                    <div class="min-w-0 flex-1 @if(!$task->trashed()) cursor-pointer @endif"
-                         @if(!$task->trashed()) x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })" @endif>
+                    <a href="{{ route('tasks.show', [$taskList, $task]) }}" wire:navigate
+                       class="min-w-0 flex-1 @if(!$task->trashed() && !$task->completed_at) cursor-pointer @endif @if($task->completed_at && !$task->trashed()) cursor-pointer @endif">
                         <div class="flex flex-wrap items-center gap-2">
                             <p class="truncate font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
                                 {{ $task->name }}
@@ -104,7 +104,7 @@
                                 {{ \App\Models\Task::PRIORITY_LABELS[$task->priority] ?? 'Medium' }}
                             </span>
                             @if($task->trashed())
-                                <span class="rounded-md bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200">Archived</span>
+                                <span class="rounded-md bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200">In Trash</span>
                             @endif
                         </div>
                         @if($task->description)
@@ -122,7 +122,7 @@
                                 {{ $task->is_overdue ? 'Overdue' : 'Due' }} {{ $task->deadline->format('M j, Y') }}
                             </p>
                         @endif
-                    </div>
+                    </a>
                     <div class="flex items-center gap-2">
                         @if(!$task->trashed())
                             @if(!$task->completed_at)
@@ -143,13 +143,10 @@
                                         <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                             Edit
                                         </flux:menu.item>
-                                        <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
-                                            Archive
-                                        </flux:menu.item>
                                         <flux:menu.item
                                             variant="danger"
                                             wire:click="delete({{ $task->id }})"
-                                            wire:confirm="Permanently delete this task?"
+                                            wire:confirm="Move this task to Trash? You can restore it later."
                                         >
                                             Delete
                                         </flux:menu.item>
