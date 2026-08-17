@@ -27,6 +27,21 @@ class Task extends Model
         2 => 'bg-red-100 text-red-700 dark:bg-red-400/10 dark:text-red-300',
     ];
 
+    public function isOverdue(): bool
+    {
+        return $this->deadline !== null
+            && $this->completed_at === null
+            && $this->deadline->isBefore(today());
+    }
+
+    public function isDueSoon(int $days = 3): bool
+    {
+        return $this->deadline !== null
+            && $this->completed_at === null
+            && ! $this->isOverdue()
+            && $this->deadline->lte(today()->addDays($days));
+    }
+
     protected $fillable = [
         'user_id',
         'task_list_id',
