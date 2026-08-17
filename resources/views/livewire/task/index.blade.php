@@ -95,7 +95,7 @@
                     <div class="min-w-0 flex-1 @if(!$task->trashed()) cursor-pointer @endif"
                          @if(!$task->trashed()) x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })" @endif>
                         <div class="flex flex-wrap items-center gap-2">
-                            <p class="font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
+                            <p class="truncate font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
                                 {{ $task->name }}
                             </p>
                             <span class="rounded-md px-2 py-0.5 text-xs font-semibold {{ \App\Models\Task::PRIORITY_BADGE_CLASSES[$task->priority] ?? \App\Models\Task::PRIORITY_BADGE_CLASSES[1] }}">
