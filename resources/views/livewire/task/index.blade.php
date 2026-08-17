@@ -92,8 +92,8 @@
                     draggable="true"
                 >
                     <span class="mt-1 select-none text-slate-300 dark:text-slate-600 cursor-grab" aria-hidden="true" x-on:click.stop>☷</span>
-                    <div class="min-w-0 flex-1 cursor-pointer"
-                         x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
+                    <div class="min-w-0 flex-1 @if(!$task->trashed()) cursor-pointer @endif"
+                         @if(!$task->trashed()) x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })" @endif>
                         <div class="flex flex-wrap items-center gap-2">
                             <p class="font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
                                 {{ $task->name }}
