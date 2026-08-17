@@ -47,6 +47,8 @@
         <div class="flex gap-2">
             <flux:button size="sm" variant="filled" :class="$filter === 'all' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'all')">All</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'active' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'active')">Active</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'overdue' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'overdue')">Overdue</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'upcoming' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'upcoming')">Due soon</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'completed' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'completed')">Completed</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'archived' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'archived')">Archived</flux:button>
         </div>
