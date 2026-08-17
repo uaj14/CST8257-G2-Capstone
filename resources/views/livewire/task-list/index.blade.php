@@ -1,6 +1,9 @@
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Task Lists</h1>
+        <div>
+            <h1 class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">My Task Lists</h1>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">Select a list or create a new one.</p>
+        </div>
         <flux:button wire:click="$dispatch('open-create-task-list')" variant="primary">
             New List
         </flux:button>

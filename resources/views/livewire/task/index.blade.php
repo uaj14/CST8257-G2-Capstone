@@ -15,6 +15,21 @@
         </flux:button>
     </div>
 
+    <div class="rounded-xl border border-neutral-200/80 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div class="p-4">
+            <form wire:submit="quickAdd" class="flex gap-2">
+                <flux:input
+                    wire:model="quickName"
+                    placeholder="Quick add: e.g. Buy groceries"
+                    class="flex-1"
+                />
+                <flux:button type="submit" variant="primary" size="sm" icon="plus">
+                    Add
+                </flux:button>
+            </form>
+        </div>
+    </div>
+
     @php
         $priorityLabels = [0 => 'Low', 1 => 'Medium', 2 => 'High'];
         $priorityColors = [0 => 'bg-green-100 text-green-800 dark:bg-green-400/10 dark:text-green-300', 1 => 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200', 2 => 'bg-red-100 text-red-800 dark:bg-red-400/10 dark:text-red-200'];

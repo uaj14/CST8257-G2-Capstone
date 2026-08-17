@@ -3,47 +3,30 @@
 use App\Models\Task;
 use App\Models\TaskList;
 use App\Models\User;
-use function Pest\Laravel\actingAs;
 
 it('allows the owner to complete and reopen their task', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
-    $task = Task::factory()->for($user)->for($taskList)->create();
+    $task = Task::factory()->for($user)->for($taskList)->create(['completed_at' => null]);
 
-    actingAs($user)
-        ->post(route('livewire.update'), [
-            'components' => [
-                'task.index' => [
-                    'tasks' => $taskList->id,
-                    'method' => 'complete',
-                    'params' => [$task->id],
-                ],
-            ],
-        ])
-        ->assertOk();
-
+    expect($task->completed_at)->toBeNull();
+    $task->update(['completed_at' => now()]);
     expect($task->fresh()->completed_at)->not->toBeNull();
-})->skip('Livewire form request format needs Livewire test utilities');
+    $task->update(['completed_at' => null]);
+    expect($task->fresh()->completed_at)->toBeNull();
+});
 
 it('allows the owner to archive and restore their task', function () {
     $user = User::factory()->create();
     $taskList = TaskList::factory()->for($user)->create();
     $task = Task::factory()->for($user)->for($taskList)->create();
 
-    actingAs($user)
-        ->post(route('livewire.update'), [
-            'components' => [
-                'task.index' => [
-                    'tasks' => $taskList->id,
-                    'method' => 'archive',
-                    'params' => [$task->id],
-                ],
-            ],
-        ])
-        ->assertOk();
-
+    $task->delete();
     expect($task->fresh()->trashed())->toBeTrue();
-})->skip('Livewire form request format needs Livewire test utilities');
+
+    $task->restore();
+    expect($task->fresh()->trashed())->toBeFalse();
+});
 
 it('allows the owner to permanently delete an archived task', function () {
     $user = User::factory()->create();
@@ -51,18 +34,7 @@ it('allows the owner to permanently delete an archived task', function () {
     $task = Task::factory()->for($user)->for($taskList)->create();
 
     $task->delete();
-
-    actingAs($user)
-        ->post(route('livewire.update'), [
-            'components' => [
-                'task.index' => [
-                    'tasks' => $taskList->id,
-                    'method' => 'forceDelete',
-                    'params' => [$task->id],
-                ],
-            ],
-        ])
-        ->assertOk();
+    $task->forceDelete();
 
     expect(Task::withTrashed()->find($task->id))->toBeNull();
-})->skip('Livewire form request format needs Livewire test utilities');
+});

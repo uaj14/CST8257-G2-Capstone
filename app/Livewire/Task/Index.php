@@ -77,6 +77,29 @@ class Index extends Component
         $this->dispatch('task-updated');
     }
 
+    public string $quickName = '';
+
+    public function quickAdd(): void
+    {
+        $this->validate([
+            'quickName' => 'required|string|max:255',
+        ]);
+
+        $maxPosition = $this->taskList->tasks()->max('position') ?? 0;
+
+        auth()->user()->tasks()->create([
+            'task_list_id' => $this->taskList->id,
+            'name' => trim($this->quickName),
+            'priority' => 1,
+            'position' => $maxPosition + 1,
+        ]);
+
+        $this->quickName = '';
+        Flux::toast('Task added.');
+
+        $this->dispatch('task-created');
+    }
+
     public function render(): View
     {
         $tasks = $this->taskList->tasks()

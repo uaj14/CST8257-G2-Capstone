@@ -78,13 +78,29 @@ test('another user cannot delete a task', function () {
     expect($otherUser->can('delete', $task))->toBeFalse();
 });
 
-test('tasks cannot be restored or permanently deleted', function () {
+test('the owner can restore and permanently delete their archived task', function () {
     $user = User::factory()->create();
 
     $task = Task::factory()->create([
         'user_id' => $user->id,
     ]);
 
-    expect($user->can('restore', $task))->toBeFalse()
-        ->and($user->can('forceDelete', $task))->toBeFalse();
+    expect($user->can('restore', $task))
+        ->toBeTrue()
+        ->and($user->can('forceDelete', $task))
+        ->toBeTrue();
+});
+
+test('another user cannot restore or permanently delete a task', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $task = Task::factory()->create([
+        'user_id' => $owner->id,
+    ]);
+
+    expect($otherUser->can('restore', $task))
+        ->toBeFalse()
+        ->and($otherUser->can('forceDelete', $task))
+        ->toBeFalse();
 });
