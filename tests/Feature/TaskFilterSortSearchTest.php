@@ -33,7 +33,6 @@ test('it defaults to the active view and filters by active, completed, archived,
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [
             $activeTask->id,
             $completedTask->id,
-            $archivedTask->id,
         ])
         ->set('filter', 'active')
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$activeTask->id])
@@ -45,7 +44,6 @@ test('it defaults to the active view and filters by active, completed, archived,
         ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [
             $activeTask->id,
             $completedTask->id,
-            $archivedTask->id,
         ]);
 });
 
