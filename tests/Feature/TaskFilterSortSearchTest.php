@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Task\Index;
+use App\Livewire\Task\Trash;
 use App\Models\Task;
 use App\Models\TaskList;
 use App\Models\User;
@@ -132,18 +133,25 @@ test('it manages complete, reopen, archive, restore, and delete actions', functi
 
     expect($task->fresh()->completed_at)->toBeNull();
 
+    // Delete moves the task to Trash (soft delete), recoverable via restore.
     Livewire::actingAs($user)
         ->test(Index::class, ['taskList' => $taskList])
-        ->call('archive', $task->id)
-        ->set('filter', 'archived')
-        ->assertViewHas('tasks', fn ($tasks) => $tasks->pluck('id')->all() === [$task->id])
+        ->call('delete', $task->id);
+
+    expect($task->fresh()->trashed())->toBeTrue();
+
+    Livewire::actingAs($user)
+        ->test(Trash::class)
+        ->assertViewHas('groups', fn ($groups) => $groups->flatMap(fn ($g) => $g['tasks'])->pluck('id')->all() === [$task->id])
         ->call('restore', $task->id);
 
     expect($task->fresh()->trashed())->toBeFalse();
 
+    // Force-delete only works on trashed tasks (from the Trash view).
+    $task->delete();
+
     Livewire::actingAs($user)
-        ->test(Index::class, ['taskList' => $taskList])
-        ->call('archive', $task->id)
+        ->test(Trash::class)
         ->call('forceDelete', $task->id);
 
     expect(Task::withTrashed()->find($task->id))->toBeNull();
@@ -159,6 +167,6 @@ test('it manages complete, reopen, archive, restore, and delete actions', functi
         ->test(Index::class, ['taskList' => $taskList])
         ->call('delete', $duplicateNameTaskA->id);
 
-    expect(Task::withTrashed()->find($duplicateNameTaskA->id))->toBeNull()
+    expect($duplicateNameTaskA->fresh()->trashed())->toBeTrue()
         ->and(Task::find($duplicateNameTaskB->id))->not->toBeNull();
 });

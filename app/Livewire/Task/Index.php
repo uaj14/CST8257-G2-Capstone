@@ -41,9 +41,9 @@ class Index extends Component
             404
         );
 
-        $task->forceDelete();
+        $task->delete();
 
-        Flux::toast('Task permanently deleted.');
+        Flux::toast('Task moved to Trash.');
         $this->dispatch('task-updated');
     }
 
@@ -155,21 +155,6 @@ class Index extends Component
         $task->update(['completed_at' => null]);
 
         Flux::toast('Task reopened.');
-        $this->dispatch('task-updated');
-    }
-
-    public function archive(Task $task): void
-    {
-        $this->authorize('update', $task);
-
-        abort_unless(
-            $task->task_list_id === $this->taskList->id,
-            404
-        );
-
-        $task->delete();
-
-        Flux::toast('Task archived.');
         $this->dispatch('task-updated');
     }
 

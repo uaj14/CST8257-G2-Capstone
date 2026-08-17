@@ -47,6 +47,8 @@
         <div class="flex gap-2">
             <flux:button size="sm" variant="filled" :class="$filter === 'all' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'all')">All</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'active' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'active')">Active</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'overdue' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'overdue')">Overdue</flux:button>
+            <flux:button size="sm" variant="filled" :class="$filter === 'upcoming' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'upcoming')">Due soon</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'completed' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'completed')">Completed</flux:button>
             <flux:button size="sm" variant="filled" :class="$filter === 'archived' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-200' : 'bg-white text-slate-700 dark:bg-white/5 dark:text-slate-200'" wire:click="$set('filter', 'archived')">Archived</flux:button>
         </div>
@@ -92,8 +94,8 @@
                     draggable="true"
                 >
                     <span class="mt-1 select-none text-slate-300 dark:text-slate-600 cursor-grab" aria-hidden="true" x-on:click.stop>☷</span>
-                    <div class="min-w-0 flex-1 @if(!$task->trashed()) cursor-pointer @endif"
-                         @if(!$task->trashed()) x-on:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })" @endif>
+                    <a href="{{ route('tasks.show', [$taskList, $task]) }}" wire:navigate
+                       class="min-w-0 flex-1 @if(!$task->trashed() && !$task->completed_at) cursor-pointer @endif @if($task->completed_at && !$task->trashed()) cursor-pointer @endif">
                         <div class="flex flex-wrap items-center gap-2">
                             <p class="truncate font-semibold text-slate-900 dark:text-white {{ (bool) $task->completed_at ? 'line-through decoration-slate-400' : '' }}">
                                 {{ $task->name }}
@@ -102,7 +104,7 @@
                                 {{ \App\Models\Task::PRIORITY_LABELS[$task->priority] ?? 'Medium' }}
                             </span>
                             @if($task->trashed())
-                                <span class="rounded-md bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200">Archived</span>
+                                <span class="rounded-md bg-zinc-50 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-400/10 dark:text-zinc-200">In Trash</span>
                             @endif
                         </div>
                         @if($task->description)
@@ -120,7 +122,7 @@
                                 {{ $task->is_overdue ? 'Overdue' : 'Due' }} {{ $task->deadline->format('M j, Y') }}
                             </p>
                         @endif
-                    </div>
+                    </a>
                     <div class="flex items-center gap-2">
                         @if(!$task->trashed())
                             @if(!$task->completed_at)
@@ -141,13 +143,10 @@
                                         <flux:menu.item wire:click="$dispatch('open-edit-task', { taskId: {{ $task->id }} })">
                                             Edit
                                         </flux:menu.item>
-                                        <flux:menu.item wire:click="archive({{ $task->id }})" wire:confirm="Archive this task?">
-                                            Archive
-                                        </flux:menu.item>
                                         <flux:menu.item
                                             variant="danger"
                                             wire:click="delete({{ $task->id }})"
-                                            wire:confirm="Permanently delete this task?"
+                                            wire:confirm="Move this task to Trash? You can restore it later."
                                         >
                                             Delete
                                         </flux:menu.item>
